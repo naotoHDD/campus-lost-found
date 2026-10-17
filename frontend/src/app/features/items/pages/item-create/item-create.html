@@ -1,0 +1,56 @@
+<section class="page">
+  <div class="publish-header">
+    <span>Nouvelle annonce • Toute la Tunisie</span>
+    <h1>Publier un objet perdu ou trouvé</h1>
+    <p>Étape {{ step }} sur 3</p>
+  </div>
+  <div class="progress"><div [class.active]="step >= 1">1</div><div [class.active]="step >= 2">2</div><div [class.active]="step >= 3">3</div></div>
+
+  <form [formGroup]="form" class="panel form-container">
+    @if (step === 1) {
+      <h2>1. Informations sur l’objet</h2>
+      <div class="two-columns">
+        <div class="form-field"><label>Type *</label><select formControlName="type"><option value="LOST">J’ai perdu un objet</option><option value="FOUND">J’ai trouvé un objet</option></select></div>
+        <div class="form-field"><label>Catégorie *</label><select formControlName="category"><option value="">Choisir</option>@for (category of categories; track category) { <option [value]="category">{{ category }}</option> }</select></div>
+      </div>
+      <div class="form-field"><label>Titre *</label><input formControlName="title" placeholder="Ex : AirPods Pro, portefeuille noir..."></div>
+      <div class="form-field"><label>Description publique *</label><textarea formControlName="description" placeholder="Décrivez l’objet sans révéler les détails secrets."></textarea></div>
+      <div class="form-field"><label>Date de perte / découverte *</label><input type="date" formControlName="itemDate"></div>
+    }
+
+    @if (step === 2) {
+      <h2>2. Localisation et photo</h2>
+      <div class="two-columns">
+        <div class="form-field"><label>Gouvernorat *</label><select formControlName="governorate"><option value="">Choisir</option>@for (gov of governorates; track gov) { <option [value]="gov">{{ gov }}</option> }</select></div>
+        <div class="form-field"><label>Délégation *</label><input formControlName="delegation" placeholder="Ex : Raoued, Hammamet, Sfax Ville"></div>
+      </div>
+      <div class="two-columns">
+        <div class="form-field"><label>Localité / quartier</label><input formControlName="locality" placeholder="Ex : Raoued Plage"></div>
+        <div class="form-field"><label>Adresse / repère *</label><input formControlName="addressText" placeholder="Ex : près de la pharmacie, devant le café..."></div>
+      </div>
+      <app-location-picker [latitude]="form.controls.latitude.value" [longitude]="form.controls.longitude.value" (positionChange)="onPositionChange($event)" />
+      <div class="form-field upload"><label>Photo</label><input type="file" accept="image/png,image/jpeg" (change)="onFileSelected($event)"></div>
+      @if (previewUrl) { <img class="preview" [src]="previewUrl" alt="Prévisualisation"> }
+    }
+
+    @if (step === 3) {
+      <h2>3. Vérification et publication</h2>
+      <div class="privacy">Les informations de vérification restent privées. Elles servent à comparer la réclamation avec les détails connus par le propriétaire.</div>
+      <div class="form-field"><label>Détails secrets *</label><textarea formControlName="verificationDetails" placeholder="Ex : rayure spécifique, contenu du sac, détail invisible sur la photo..."></textarea></div>
+      <div class="form-field"><label>Question de vérification *</label><input formControlName="verificationQuestion" placeholder="Ex : quelle est la couleur de l’étui ?"></div>
+      <div class="summary">
+        <h3>Résumé public</h3>
+        <p><strong>{{ form.value.type === 'FOUND' ? 'Trouvé' : 'Perdu' }} :</strong> {{ form.value.title }}</p>
+        <p>{{ form.value.category }} • {{ form.value.governorate }} / {{ form.value.delegation }}</p>
+        <p>{{ form.value.addressText }}</p>
+      </div>
+      @if (errorMessage) { <p class="error-message">{{ errorMessage }}</p> }
+    }
+
+    <div class="actions">
+      @if (step > 1) { <button type="button" class="btn btn-secondary" (click)="previousStep()">Retour</button> }
+      @if (step < 3) { <button type="button" class="btn btn-primary" (click)="nextStep()">Continuer</button> }
+      @else { <button type="button" class="btn btn-primary" [disabled]="loading" (click)="publish()">{{ loading ? 'Publication...' : 'Publier l’annonce' }}</button> }
+    </div>
+  </form>
+</section>

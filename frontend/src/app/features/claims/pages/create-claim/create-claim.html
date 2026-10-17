@@ -1,0 +1,93 @@
+<section class="page">
+
+  <div class="panel claim-form">
+
+    <h1>
+      Réclamer cet objet
+    </h1>
+
+    <p>
+      Donnez des informations
+      permettant de vérifier que
+      l'objet vous appartient.
+    </p>
+
+    <div class="warning">
+
+      Ne partagez jamais de
+      mot de passe ou
+      d'information bancaire.
+
+    </div>
+
+    <form
+      [formGroup]="form"
+      (ngSubmit)="submit()"
+    >
+
+      <div class="form-field">
+
+        <label>
+          Preuve ou détail
+        </label>
+
+        <textarea
+          formControlName=
+            "proofText"
+          placeholder=
+            "Décrivez un détail que seul le propriétaire peut connaître."
+        ></textarea>
+
+      </div>
+
+      <div class="form-field">
+
+        <label>
+          Réponse à la question
+        </label>
+
+        <input
+          formControlName=
+            "answer"
+        >
+
+      </div>
+
+      <div class="form-field">
+
+        <label>
+          Fichier justificatif
+          optionnel
+        </label>
+
+        <input
+          type="file"
+          (change)="
+            onFileSelected(
+              $event
+            )
+          "
+        >
+
+      </div>
+
+      @if (errorMessage) {
+
+        <p class="error-message">
+          {{ errorMessage }}
+        </p>
+
+      }
+
+      <button
+        class="btn btn-primary"
+        [disabled]="form.invalid"
+      >
+        Envoyer la réclamation
+      </button>
+
+    </form>
+
+  </div>
+
+</section>

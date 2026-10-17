@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum ItemType {
+  LOST
+  FOUND
+}
+
+enum ItemStatus {
+  ACTIVE
+  CLAIMED
+  RETURNED
+  CLOSED
+}
+
+enum ClaimStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  COMPLETED
+}
+
+enum RecoveryStatus {
+  PENDING
+  SCHEDULED
+  VERIFIED
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id           Int            @id @default(autoincrement())
+  name         String
+  email        String         @unique
+  passwordHash String
+  role         Role           @default(USER)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  items        Item[]
+  claims       Claim[]
+  notifications Notification[]
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  items     Item[]
+}
+
+model Location {
+  id          Int       @id @default(autoincrement())
+  governorate String
+  delegation  String
+  locality    String?
+  addressText String?
+  latitude    Decimal?
+  longitude   Decimal?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  items       Item[]
+
+  @@unique([governorate, delegation, locality, addressText])
+}
+
+model Item {
+  id                   Int       @id @default(autoincrement())
+  title                String
+  description          String
+  type                 ItemType
+  status               ItemStatus @default(ACTIVE)
+  itemDate             DateTime
+  imageUrl             String?
+  verificationDetails  String?
+  verificationQuestion String?
+  authorId             Int
+  categoryId           Int
+  locationId           Int
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  author   User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  category Category  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  location Location  @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  claims   Claim[]
+}
+
+model Claim {
+  id             Int         @id @default(autoincrement())
+  itemId         Int
+  claimantId     Int
+  proofText      String
+  answer         String?
+  attachmentUrl  String?
+  status         ClaimStatus @default(PENDING)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  item     Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  claimant User      @relation(fields: [claimantId], references: [id], onDelete: Cascade)
+  recovery Recovery?
+
+  @@unique([itemId, claimantId])
+}
+
+model Recovery {
+  id               Int            @id @default(autoincrement())
+  claimId          Int            @unique
+  meetingLocation  String?
+  meetingDate      DateTime?
+  verificationCode String?
+  finderConfirmed  Boolean        @default(false)
+  claimantConfirmed Boolean       @default(false)
+  status           RecoveryStatus @default(PENDING)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  claim Claim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

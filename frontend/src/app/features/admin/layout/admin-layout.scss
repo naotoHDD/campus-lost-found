@@ -1,0 +1,11 @@
+.admin-shell { min-height: 100vh; background: #f3f6fb; display: grid; grid-template-columns: 260px 1fr; }
+.sidebar { background: #102038; color: white; padding: 24px 18px; display: flex; flex-direction: column; min-height: 100vh; position: sticky; top: 0; }
+.brand { display: grid; gap: 2px; padding: 5px 10px 28px; } .brand strong { font-size: 21px; } .brand span { color: #8fb1ed; font-size: 11px; letter-spacing: 1.4px; font-weight: 800; }
+.sidebar nav { display: grid; gap: 7px; } .sidebar a { color: #d9e4f5; text-decoration: none; padding: 12px 13px; border-radius: 9px; font-weight: 600; } .sidebar a.active,.sidebar a:hover { background: #1d3f70; color: white; }
+.sidebar-bottom { margin-top: auto; display: grid; gap: 8px; border-top: 1px solid rgba(255,255,255,.1); padding-top: 18px; }
+.sidebar-bottom button { text-align: left; color: #ffd0d5; background: transparent; border: 0; padding: 12px 13px; font-weight: 700; }
+.admin-main { min-width: 0; }
+.admin-topbar { min-height: 72px; padding: 0 28px; background: white; border-bottom: 1px solid #e3e8f0; display: flex; align-items: center; justify-content: space-between; }
+.admin-topbar div { display: grid; } .admin-topbar span { font-size: 12px; color: var(--muted); } .admin-topbar strong { color: var(--navy); }
+.badge { background: #e9efff; color: var(--blue) !important; padding: 7px 10px; border-radius: 20px; font-weight: 800; }
+@media (max-width: 800px) { .admin-shell { grid-template-columns: 1fr; } .sidebar { min-height: auto; position: static; } .sidebar nav { grid-template-columns: repeat(2,1fr); } .sidebar-bottom { margin-top: 18px; } }

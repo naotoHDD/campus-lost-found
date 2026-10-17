@@ -1,0 +1,25 @@
+<section class="page">
+  <div class="page-heading"><span>Recherche nationale</span><h1>Retrouvez un objet partout en Tunisie</h1><p>Filtrez par gouvernorat, délégation, catégorie ou mot-clé.</p></div>
+  <div class="search-layout">
+    <aside class="filters panel">
+      <h2>Filtres</h2>
+      <div class="form-field"><label>Recherche</label><input [(ngModel)]="searchTerm" (ngModelChange)="changeFilters()" placeholder="AirPods, portefeuille, carte..."></div>
+      <div class="form-field"><label>Type</label><select [(ngModel)]="typeFilter" (ngModelChange)="changeFilters()"><option value="">Tous</option><option value="LOST">Perdu</option><option value="FOUND">Trouvé</option></select></div>
+      <div class="form-field"><label>Gouvernorat</label><select [(ngModel)]="governorateFilter" (ngModelChange)="changeFilters()"><option value="">Toute la Tunisie</option>@for (gov of governorates; track gov) { <option [value]="gov">{{ gov }}</option> }</select></div>
+      <div class="form-field"><label>Délégation</label><input [(ngModel)]="delegationFilter" (ngModelChange)="changeFilters()" placeholder="Ex : Raoued"></div>
+      <div class="form-field"><label>Catégorie</label><select [(ngModel)]="categoryFilter" (ngModelChange)="changeFilters()"><option value="">Toutes</option>@for (category of categories; track category) { <option [value]="category">{{ category }}</option> }</select></div>
+      <div class="form-field"><label>Trier</label><select [(ngModel)]="sort" (ngModelChange)="changeFilters()"><option value="recent">Plus récent</option><option value="old">Plus ancien</option></select></div>
+    </aside>
+    <div class="results">
+      <div class="results-header"><div><h2>Résultats</h2><span>{{ totalItems }} annonce(s)</span></div><span class="map-note">📍 Les annonces avec coordonnées affichent leur emplacement dans le détail.</span></div>
+      @if (loading) {
+        <div class="empty-state">Chargement des annonces…</div>
+      } @else if (errorMessage) {
+        <div class="empty-state"><h3>Chargement impossible</h3><p>{{ errorMessage }}</p><button type="button" (click)="loadItems()">Réessayer</button></div>
+      } @else if (pagedItems.length > 0) {
+        <div class="items-grid">@for (item of pagedItems; track item.id) { <app-item-card [item]="item" /> }</div>
+        <div class="pagination"><button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">Précédent</button><span>Page {{ currentPage }} / {{ totalPages }}</span><button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">Suivant</button></div>
+      } @else { <div class="empty-state"><h3>Aucun objet trouvé</h3><p>Modifiez les filtres et réessayez.</p></div> }
+    </div>
+  </div>
+</section>

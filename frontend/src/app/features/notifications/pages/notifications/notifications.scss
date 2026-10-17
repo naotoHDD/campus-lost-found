@@ -1,0 +1,15 @@
+.notifications {
+  max-width: 760px;
+
+  display: grid;
+
+  gap: 12px;
+}
+
+.notifications h3 {
+  margin-top: 0;
+}
+
+.notifications small {
+  color: var(--muted);
+}

@@ -1,0 +1,40 @@
+<section class="page">
+
+  <h1>
+    Activité
+  </h1>
+
+  @if (loading) { <p>Chargement des notifications...</p> }
+  @if (errorMessage) { <p class="error-message">{{ errorMessage }}</p> }
+
+  <div class="notifications">
+
+    @for (
+      notification
+      of notifications;
+      track notification.id
+    ) {
+
+      <article class="panel">
+
+        <h3>
+          {{
+            notification.title
+          }}
+        </h3>
+
+        <p>
+          {{ notification.message }}
+        </p>
+
+        <small>{{ notification.createdAt | date:'medium' }}</small>
+
+      </article>
+
+    }
+
+    @empty { @if (!loading && !errorMessage) { <p>Aucune notification.</p> } }
+
+  </div>
+
+</section>

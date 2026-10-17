@@ -1,0 +1,22 @@
+<article class="item-card">
+  <div class="image-container">
+    @if (item.imageUrl) {
+      <img [src]="item.imageUrl" [alt]="item.title">
+    } @else {
+      <div class="placeholder"><span aria-hidden="true">⌕</span><small>Photo non disponible</small></div>
+    }
+    <span class="type-badge" [class.found]="item.type === 'FOUND'" [class.lost]="item.type === 'LOST'">{{ item.type === 'FOUND' ? 'TROUVÉ' : 'PERDU' }}</span>
+  </div>
+  <div class="card-content">
+    <p class="category">{{ item.category.name }}</p>
+    <h3><a [routerLink]="['/items', item.id]">{{ item.title }}</a></h3>
+    <div class="meta">
+      <p class="location"><span aria-hidden="true">📍</span> {{ item.governorate }} • {{ item.delegation }}</p>
+      <p><span aria-hidden="true">📅</span> {{ item.itemDate | date:'dd/MM/yyyy' }}</p>
+    </div>
+    <div class="card-footer">
+      <span class="status" [class.returned]="item.status === 'RETURNED'">{{ statusLabel }}</span>
+      <a [routerLink]="['/items', item.id]" class="details" [attr.aria-label]="'Voir les détails de ' + item.title">Voir l’annonce <span aria-hidden="true">→</span></a>
+    </div>
+  </div>
+</article>

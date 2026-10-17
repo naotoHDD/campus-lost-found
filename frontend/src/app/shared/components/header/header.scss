@@ -1,0 +1,133 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  color: white;
+  background: rgba(16, 33, 61, 0.96);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px);
+}
+
+.header-inner {
+  max-width: 1240px;
+  min-height: 68px;
+  margin: auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-right: auto;
+  color: white;
+  text-decoration: none;
+}
+
+.logo-mark {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  color: var(--navy);
+  background: linear-gradient(145deg, #ffffff, #bcd0ff);
+  font-size: 13px;
+  font-weight: 900;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.logo-copy {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+}
+
+.logo-copy strong {
+  font-size: 16px;
+  letter-spacing: -0.2px;
+}
+
+.logo-copy small {
+  margin-top: 4px;
+  color: #a9c1f5;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.7px;
+  text-transform: uppercase;
+}
+
+.desktop-nav,
+.account {
+  display: flex;
+  align-items: center;
+}
+
+.desktop-nav {
+  gap: 6px;
+}
+
+.account {
+  gap: 9px;
+}
+
+.desktop-nav a,
+.login-link,
+.admin-link,
+.publish-link {
+  color: white;
+  text-decoration: none;
+  border-radius: 10px;
+  padding: 9px 11px;
+  font-size: 14px;
+  font-weight: 650;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.desktop-nav a:hover,
+.login-link:hover,
+.desktop-nav a.active {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.desktop-nav a.active {
+  color: #bcd0ff;
+}
+
+.publish-link {
+  background: var(--blue);
+  box-shadow: 0 7px 18px rgba(53, 109, 243, 0.3);
+}
+
+.admin-link {
+  color: #ffe5a3;
+  background: rgba(245, 185, 63, 0.13);
+}
+
+@media (max-width: 900px) {
+  .desktop-nav,
+  .publish-link,
+  .admin-link {
+    display: none;
+  }
+
+  .header-inner {
+    min-height: 60px;
+    padding: 0 14px;
+  }
+
+  .login-link {
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+@media (max-width: 380px) {
+  .logo-copy strong {
+    font-size: 14px;
+  }
+}

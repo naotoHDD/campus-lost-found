@@ -1,0 +1,136 @@
+<section class="page">
+
+  <div class="recovery">
+
+    <div class="panel">
+
+      <span class="step-label">
+        Restitution
+      </span>
+
+      <h1>
+        Organiser la remise
+      </h1>
+
+      <p>
+        Utilisez uniquement
+        un lieu universitaire.
+      </p>
+
+      <div class="form-field">
+
+        <label>
+          Lieu
+        </label>
+
+        <select
+          [(ngModel)]="location"
+        >
+          <option>
+            Bibliothèque
+          </option>
+
+          <option>
+            Administration
+          </option>
+
+          <option>
+            Sécurité
+          </option>
+
+          <option>
+            Accueil
+          </option>
+        </select>
+
+      </div>
+
+      <div class="form-field">
+
+        <label>
+          Date
+        </label>
+
+        <input
+          type="date"
+          [(ngModel)]="date"
+        >
+
+      </div>
+
+      <div class="form-field">
+
+        <label>
+          Heure
+        </label>
+
+        <input
+          type="time"
+          [(ngModel)]="time"
+        >
+
+      </div>
+
+    </div>
+
+
+    <div class="panel">
+
+      <h2>
+        Code de récupération
+      </h2>
+
+      <p>
+        Le propriétaire affiche
+        le code et le finder le
+        saisit lors de la remise.
+      </p>
+
+      <input
+        class="code-input"
+        maxlength="6"
+        placeholder="000000"
+        [(ngModel)]="code"
+      >
+
+      <div class="confirmations">
+
+        <label>
+          <input
+            type="checkbox"
+            [(ngModel)]="
+              finderConfirmed
+            "
+          >
+          Objet remis
+        </label>
+
+        <label>
+          <input
+            type="checkbox"
+            [(ngModel)]="
+              claimantConfirmed
+            "
+          >
+          Objet récupéré
+        </label>
+
+      </div>
+
+      @if (
+        finderConfirmed &&
+        claimantConfirmed
+      ) {
+
+        <div class="success-message">
+          Double confirmation
+          effectuée.
+        </div>
+
+      }
+
+    </div>
+
+  </div>
+
+</section>

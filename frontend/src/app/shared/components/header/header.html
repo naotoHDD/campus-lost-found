@@ -1,0 +1,30 @@
+<header class="header">
+  <div class="header-inner">
+    <a routerLink="/" class="logo" aria-label="Lost and Found Tunisia - Accueil">
+      <span class="logo-mark">LF</span>
+      <span class="logo-copy">
+        <strong>Lost & Found</strong>
+        <small>Tunisia</small>
+      </span>
+    </a>
+    <nav class="desktop-nav">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Accueil</a>
+      <a routerLink="/items" routerLinkActive="active">Recherche</a>
+      @if (auth.isLoggedIn()) {
+        <a routerLink="/my-items" routerLinkActive="active">Mes annonces</a>
+        <a routerLink="/my-claims" routerLinkActive="active">Réclamations</a>
+      }
+    </nav>
+    <div class="account">
+      @if (auth.isAdmin()) {
+        <a routerLink="/admin" class="admin-link">Administration</a>
+      }
+      @if (auth.isLoggedIn()) {
+        <a routerLink="/publish" class="publish-link">+ Publier</a>
+        <a routerLink="/profile" class="login-link" aria-label="Ouvrir mon profil">Profil</a>
+      } @else {
+        <a routerLink="/login" class="login-link">Connexion</a>
+      }
+    </div>
+  </div>
+</header>

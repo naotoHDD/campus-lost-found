@@ -1,0 +1,63 @@
+<section class="auth-page">
+  <div class="auth-card">
+    <span class="auth-label">Lost &amp; Found Tunisia</span>
+
+    <h1>Créer un compte</h1>
+    <p class="subtitle">
+      Inscrivez-vous pour publier une annonce et récupérer vos objets en toute sécurité.
+    </p>
+
+    <form [formGroup]="registerForm" (ngSubmit)="submit()">
+      <div class="form-field">
+        <label for="register-name">Nom</label>
+        <input
+          id="register-name"
+          type="text"
+          formControlName="name"
+          autocomplete="name"
+          placeholder="Votre nom"
+        />
+      </div>
+
+      <div class="form-field">
+        <label for="register-email">E-mail</label>
+        <input
+          id="register-email"
+          type="email"
+          formControlName="email"
+          autocomplete="email"
+          inputmode="email"
+          placeholder="nom@exemple.com"
+        />
+      </div>
+
+      <div class="form-field">
+        <label for="register-password">Mot de passe</label>
+        <input
+          id="register-password"
+          type="password"
+          formControlName="password"
+          autocomplete="new-password"
+          placeholder="6 caractères minimum"
+        />
+      </div>
+
+      @if (errorMessage) {
+        <p class="error-message" role="alert">{{ errorMessage }}</p>
+      }
+
+      <button
+        type="submit"
+        class="btn btn-primary full"
+        [disabled]="registerForm.invalid || loading"
+      >
+        {{ loading ? 'Création...' : 'Créer mon compte' }}
+      </button>
+    </form>
+
+    <p class="bottom-text">
+      Déjà inscrit ?
+      <a routerLink="/login">Connexion</a>
+    </p>
+  </div>
+</section>

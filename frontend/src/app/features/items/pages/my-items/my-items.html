@@ -1,0 +1,54 @@
+<section class="page">
+
+  <h1>
+    Mes annonces
+  </h1>
+
+  @if (loading) {
+    <div class="empty-state">Chargement de vos annonces…</div>
+  } @else if (errorMessage) {
+    <div class="empty-state">
+      <p>{{ errorMessage }}</p>
+      <button type="button" (click)="loadItems()">Réessayer</button>
+    </div>
+  } @else if (items.length === 0) {
+    <div class="empty-state">Vous n'avez pas encore publié d'annonce.</div>
+  } @else {
+  <div class="my-grid">
+
+    @for (
+      item of items;
+      track item.id
+    ) {
+
+      <div>
+
+        <app-item-card
+          [item]="item"
+        />
+
+        @if (
+          item.status ===
+            'ACTIVE'
+        ) {
+
+          <button
+            class=
+              "btn btn-danger close"
+            (click)="
+              closeItem(item.id)
+            "
+          >
+            Fermer l'annonce
+          </button>
+
+        }
+
+      </div>
+
+    }
+
+  </div>
+  }
+
+</section>

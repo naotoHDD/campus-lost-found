@@ -1,0 +1,31 @@
+.my-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, 1fr);
+
+  gap: 20px;
+}
+
+.close {
+  width: 100%;
+  margin-top: 8px;
+}
+
+@media (max-width: 900px) {
+
+  .my-grid {
+    grid-template-columns:
+      repeat(2, 1fr);
+  }
+
+}
+
+@media (max-width: 599px) {
+
+  .my-grid {
+    grid-template-columns:
+      1fr;
+  }
+
+}

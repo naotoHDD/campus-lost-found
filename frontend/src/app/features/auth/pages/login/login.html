@@ -1,0 +1,23 @@
+<section class="auth-page">
+  <div class="auth-card">
+    <span class="auth-label">Lost & Found Tunisia</span>
+    <h1>Connexion</h1>
+    <p class="subtitle">Connectez-vous pour publier, réclamer ou administrer les annonces.</p>
+
+    <form [formGroup]="loginForm" (ngSubmit)="submit()">
+      <div class="form-field">
+        <label>Email</label>
+        <input type="email" formControlName="email" placeholder="nom@exemple.com" autocomplete="email">
+      </div>
+      <div class="form-field">
+        <label>Mot de passe</label>
+        <input type="password" formControlName="password" placeholder="Votre mot de passe" autocomplete="current-password">
+      </div>
+      @if (errorMessage) { <p class="error-message">{{ errorMessage }}</p> }
+      <button class="btn btn-primary full" type="submit" [disabled]="loginForm.invalid || loading">
+        {{ loading ? 'Connexion...' : 'Se connecter' }}
+      </button>
+    </form>
+    <p class="bottom-text">Pas encore de compte ? <a routerLink="/register">Créer un compte</a></p>
+  </div>
+</section>

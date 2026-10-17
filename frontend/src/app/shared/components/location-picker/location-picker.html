@@ -1,0 +1,12 @@
+<div class="picker-header">
+  <div>
+    <strong>{{ readonly ? 'Emplacement de l’annonce' : 'Choisir sur la carte' }}</strong>
+    @if (!readonly) { <p>Cliquez sur la carte pour placer le marqueur.</p> }
+  </div>
+  @if (!readonly) { <button type="button" class="geo-button" (click)="useMyPosition()">Utiliser ma position</button> }
+</div>
+<div [id]="readonly ? 'detail-map' : 'location-picker-map'" class="map"></div>
+@if (!mapAvailable) {
+  <div class="map-fallback">La carte en ligne n’est pas disponible. Vous pouvez toujours saisir le gouvernorat, la délégation et l’adresse manuellement.</div>
+}
+<div class="coordinates"><span>Lat: {{ latitude }}</span><span>Lng: {{ longitude }}</span></div>

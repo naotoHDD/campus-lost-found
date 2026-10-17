@@ -1,0 +1,55 @@
+<section class="hero">
+  <div class="hero-layout">
+    <div class="hero-content">
+      <span class="eyebrow"><i aria-hidden="true"></i> Plateforme nationale • Tunisie</span>
+      <h1>Retrouver un objet devient plus simple.</h1>
+      <p>Publiez, recherchez et restituez des objets perdus ou trouvés dans {{ governorateCount || 24 }} gouvernorats, avec une localisation précise et une vérification sécurisée.</p>
+      <div class="hero-actions">
+        <a routerLink="/publish" [queryParams]="{type:'LOST'}" class="btn btn-primary">J’ai perdu un objet</a>
+        <a routerLink="/publish" [queryParams]="{type:'FOUND'}" class="btn btn-light">J’ai trouvé un objet</a>
+        <a routerLink="/items" class="btn ghost">Parcourir les annonces</a>
+      </div>
+      <div class="trust-row" aria-label="Avantages de la plateforme">
+        <span>✓ Publication rapide</span>
+        <span>✓ Recherche nationale</span>
+        <span>✓ Restitution vérifiée</span>
+      </div>
+    </div>
+    <aside class="hero-card" aria-label="Fonctionnement rapide">
+      <div class="hero-card-icon" aria-hidden="true">⌕</div>
+      <span class="hero-card-label">Recherche intelligente</span>
+      <h2>Un signalement peut faire la différence.</h2>
+      <p>Ajoutez la catégorie, le lieu et la date. La plateforme facilite ensuite la mise en relation.</p>
+      <div class="coverage"><strong>{{ governorateCount || 24 }}</strong><span>gouvernorats couverts</span></div>
+    </aside>
+  </div>
+</section>
+
+<section class="home-section">
+  <div class="section-title">
+    <div><span>Dernières annonces</span><h2>Objets récemment trouvés</h2></div>
+    <a routerLink="/items" class="see-all">Voir toutes les annonces <span aria-hidden="true">→</span></a>
+  </div>
+  @if (loading) {
+    <div class="loading-state"><span></span><p>Chargement des annonces...</p></div>
+  } @else if (errorMessage) {
+    <p class="error-message">{{ errorMessage }}</p>
+  } @else {
+    <div class="items-grid">
+      @for (item of recentItems; track item.id) { <app-item-card [item]="item" /> }
+      @empty { <div class="empty-state">Aucune annonce récente.</div> }
+    </div>
+  }
+</section>
+
+<section class="process-section">
+  <div class="home-section">
+    <div class="section-heading"><span>Simple et sécurisé</span><h2>Comment ça marche ?</h2><p>Quatre étapes claires, de la publication à la restitution.</p></div>
+    <div class="steps">
+      <div class="step"><span>1</span><h3>Publiez</h3><p>Décrivez l’objet et précisez le lieu où il a été perdu ou trouvé.</p></div>
+      <div class="step"><span>2</span><h3>Recherchez</h3><p>Utilisez les filtres pour explorer rapidement les annonces pertinentes.</p></div>
+      <div class="step"><span>3</span><h3>Vérifiez</h3><p>Confirmez la propriété grâce à des informations qui restent privées.</p></div>
+      <div class="step"><span>4</span><h3>Restituez</h3><p>Organisez la remise et confirmez que l’objet a retrouvé son propriétaire.</p></div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,18 @@
+<div class="admin-shell">
+  <aside class="sidebar">
+    <div class="brand"><strong>Lost & Found</strong><span>ADMIN TUNISIA</span></div>
+    <nav>
+      <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">◫ Dashboard</a>
+      <a routerLink="/admin/items" routerLinkActive="active">▣ Toutes les annonces</a>
+      <a routerLink="/admin/claims" routerLinkActive="active">✓ Réclamations</a>
+      <a routerLink="/admin/users" routerLinkActive="active">● Utilisateurs</a>
+      <a routerLink="/admin/categories" routerLinkActive="active">⌑ Catégories</a>
+      <a routerLink="/admin/locations" routerLinkActive="active">⌖ Localisations</a>
+    </nav>
+    <div class="sidebar-bottom"><a routerLink="/">Voir le site public</a><button (click)="logout()">Déconnexion</button></div>
+  </aside>
+  <section class="admin-main">
+    <header class="admin-topbar"><div><span>Espace administrateur</span><strong>Super-utilisateur</strong></div><span class="badge">ADMIN</span></header>
+    <router-outlet></router-outlet>
+  </section>
+</div>

@@ -1,0 +1,54 @@
+<section class="page">
+
+  <div class="panel profile">
+
+    @if (errorMessage) { <p class="error-message">{{ errorMessage }}</p> }
+
+    <span>
+      Mon compte
+    </span>
+
+    <h1>
+      Profil
+    </h1>
+
+    @if (user) {
+    <div class="form-field">
+
+      <label>
+        Nom
+      </label>
+
+      <input [value]="user.name" readonly>
+
+    </div>
+
+    <div class="form-field">
+
+      <label>
+        Email
+      </label>
+
+      <input [value]="user.email" readonly>
+
+    </div>
+
+    <p>
+      <strong>
+        Rôle :
+      </strong>
+
+      {{ user.role }}
+    </p>
+    }
+
+    <button
+      class="btn btn-danger"
+      (click)="logout()"
+    >
+      Déconnexion
+    </button>
+
+  </div>
+
+</section>

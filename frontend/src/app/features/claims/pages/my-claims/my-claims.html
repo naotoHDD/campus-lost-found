@@ -1,0 +1,61 @@
+<section class="page">
+
+  <h1>
+    Mes réclamations
+  </h1>
+
+  @if (loading) { <p>Chargement des réclamations...</p> }
+  @if (errorMessage) { <p class="error-message">{{ errorMessage }}</p> }
+
+  <div class="claims">
+
+    @for (
+      claim of claims;
+      track claim.id
+    ) {
+
+      <article class="claim panel">
+
+        <div>
+
+          <span class="status">
+            {{ claim.status }}
+          </span>
+
+          <h2>
+            {{ claim.item.title }}
+          </h2>
+
+          <p>
+            {{ claim.proofText }}
+          </p>
+
+        </div>
+
+        @if (
+          claim.status ===
+            'ACCEPTED'
+        ) {
+
+          <a
+            [routerLink]="[
+              '/recovery',
+              claim.id
+            ]"
+            class=
+              "btn btn-primary"
+          >
+            Organiser la remise
+          </a>
+
+        }
+
+      </article>
+
+    }
+
+    @empty { @if (!loading && !errorMessage) { <p>Aucune réclamation.</p> } }
+
+  </div>
+
+</section>

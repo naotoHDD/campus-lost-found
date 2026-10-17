@@ -1,0 +1,7 @@
+.picker-header { display: flex; justify-content: space-between; gap: 12px; align-items: start; margin-bottom: 10px; }
+.picker-header p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+.geo-button { border: 1px solid var(--blue); background: white; color: var(--blue); padding: 9px 12px; border-radius: 8px; font-weight: 700; }
+.map { width: 100%; min-height: 330px; border-radius: 12px; background: #e8eef7; border: 1px solid var(--border); overflow: hidden; }
+.coordinates { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; color: var(--muted); font-size: 12px; }
+.map-fallback { margin-top: 8px; padding: 12px; background: #fff8df; border-radius: 8px; }
+@media (max-width: 599px) { .picker-header { flex-direction: column; } .geo-button { width: 100%; } .map { min-height: 280px; } }
