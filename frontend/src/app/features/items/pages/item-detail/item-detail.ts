@@ -3,16 +3,28 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { Item } from '../../../../core/models/item.model';
 import { ItemService } from '../../../../core/services/item';
+import { AuthService } from '../../../../core/services/auth';
 import { LocationPicker } from '../../../../shared/components/location-picker/location-picker';
 
-@Component({ selector: 'app-item-detail', imports: [RouterLink, DatePipe, LocationPicker], templateUrl: './item-detail.html', styleUrl: './item-detail.scss' })
+@Component({
+  selector: 'app-item-detail',
+  imports: [RouterLink, DatePipe, LocationPicker],
+  templateUrl: './item-detail.html',
+  styleUrl: './item-detail.scss',
+})
 export class ItemDetail {
   item?: Item;
   loading = true;
   errorMessage = '';
+  isOwnItem = false;
   private itemId = 0;
 
-  constructor(route: ActivatedRoute, private readonly itemService: ItemService, private readonly changeDetector: ChangeDetectorRef) {
+  constructor(
+    route: ActivatedRoute,
+    private readonly itemService: ItemService,
+    private readonly authService: AuthService,
+    private readonly changeDetector: ChangeDetectorRef,
+  ) {
     this.itemId = Number(route.snapshot.paramMap.get('id'));
     this.loadItem();
   }
@@ -21,14 +33,16 @@ export class ItemDetail {
     this.loading = true;
     this.errorMessage = '';
     this.itemService.getItem(this.itemId).subscribe({
-      next: item => {
+      next: (item) => {
         this.item = item;
+        this.isOwnItem = item.author?.id === this.authService.getCurrentUser()?.id;
         this.loading = false;
         this.changeDetector.markForCheck();
       },
       error: () => {
         this.item = undefined;
-        this.errorMessage = 'Impossible de charger cet objet. Vérifiez que le backend fonctionne puis réessayez.';
+        this.errorMessage =
+          'Impossible de charger cet objet. Vérifiez que le backend fonctionne puis réessayez.';
         this.loading = false;
         this.changeDetector.markForCheck();
       },

@@ -1,17 +1,155 @@
-.claim-form {
-  max-width: 680px;
-  margin: auto;
+.claim-page {
+  max-width: 1060px;
 }
 
-.warning {
+.claim-layout {
+  display: grid;
+  grid-template-columns: minmax(230px, 0.75fr) minmax(0, 1.65fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.item-summary {
+  position: sticky;
+  top: 88px;
+}
+
+.item-summary img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  margin: 14px 0 4px;
+  border-radius: 13px;
+  object-fit: cover;
+}
+
+.item-summary h2 {
+  margin: 14px 0 6px;
+  color: var(--navy);
+}
+
+.item-summary p,
+.intro,
+.file-field small {
+  color: var(--muted);
+}
+
+.item-summary a {
+  display: inline-block;
+  margin-top: 8px;
+  color: var(--blue);
+  font-weight: 700;
+}
+
+.claim-form {
+  max-width: 720px;
+}
+
+.claim-form h1 {
+  margin: 7px 0;
+  color: var(--navy);
+  font-size: clamp(28px, 5vw, 40px);
+  letter-spacing: -0.8px;
+}
+
+.eyebrow {
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+}
+
+.intro {
+  margin: 0 0 22px;
+}
+
+.notice {
+  margin: 18px 0;
+  padding: 13px 15px;
+  border-radius: 10px;
+}
+
+.notice-warning {
+  border-left: 4px solid var(--gold);
   background: #fff8df;
+}
 
-  border-left:
-    4px solid var(--gold);
+.notice-error {
+  border-left: 4px solid var(--red);
+  background: #fff0f2;
+  color: #9d2734;
+}
 
-  padding: 14px;
+.question-card {
+  display: grid;
+  gap: 4px;
+  margin: 22px 0;
+  padding: 16px;
+  border: 1px solid #cfdafe;
+  border-radius: 13px;
+  background: var(--blue-soft);
+}
 
-  margin: 20px 0;
+.question-card span {
+  color: var(--blue-dark);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
 
-  border-radius: 8px;
+.question-card strong {
+  color: var(--navy);
+  font-size: 17px;
+}
+
+.field-error {
+  color: var(--red) !important;
+}
+
+.file-selected {
+  color: var(--teal);
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.state-card {
+  max-width: 620px;
+  margin: auto;
+  text-align: center;
+}
+
+.state-card .btn {
+  margin: 8px 4px 0;
+}
+
+@media (max-width: 760px) {
+  .claim-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .item-summary {
+    position: static;
+  }
+
+  .item-summary img {
+    max-height: 230px;
+  }
+}
+
+@media (max-width: 480px) {
+  .actions {
+    flex-direction: column-reverse;
+  }
+
+  .actions .btn {
+    width: 100%;
+  }
 }

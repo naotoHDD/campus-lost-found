@@ -1,71 +1,78 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsDateString, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsDateString,
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { ItemType } from '@prisma/client';
 
 export class CreateItemDto {
   @ApiProperty({ example: 'Lost keys' })
   @IsNotEmpty()
-    @ApiProperty({ example: 'Blue keychain with three keys' })
-    @ApiProperty({ enum: ItemType })
-    @ApiProperty({ example: 'Keys' })
-    @ApiProperty({ format: 'date-time', example: '2026-10-05T12:00:00.000Z' })
-    @ApiProperty({ example: 'Tunis' })
-    @ApiProperty({ example: 'La Marsa' })
-    @ApiPropertyOptional({ example: 'Gammarth' })
-    @ApiPropertyOptional({ example: 'Near the main gate' })
-    @ApiPropertyOptional({ example: 36.9 })
-    @ApiPropertyOptional({ example: 10.3 })
-    @ApiPropertyOptional({ example: 'Blue rubber tag' })
-    @ApiPropertyOptional({ example: 'What is attached to the key ring?' })
   @IsString()
-  title: string;
+  title!: string;
 
+  @ApiProperty({ example: 'Blue keychain with three keys' })
   @IsNotEmpty()
   @IsString()
-  description: string;
+  description!: string;
 
+  @ApiProperty({ enum: ItemType })
   @IsEnum(ItemType)
-  type: ItemType;
+  type!: ItemType;
 
+  @ApiProperty({ example: 'Keys' })
   @IsNotEmpty()
   @IsString()
-  category: string;
+  category!: string;
 
+  @ApiProperty({ format: 'date-time', example: '2026-10-05T12:00:00.000Z' })
   @IsDateString()
-  itemDate: string;
+  itemDate!: string;
 
+  @ApiProperty({ example: 'Tunis' })
   @IsNotEmpty()
   @IsString()
-  governorate: string;
+  governorate!: string;
 
+  @ApiProperty({ example: 'La Marsa' })
   @IsNotEmpty()
   @IsString()
-  delegation: string;
+  delegation!: string;
 
+  @ApiPropertyOptional({ example: 'Gammarth' })
   @IsOptional()
   @IsString()
   locality?: string;
 
+  @ApiPropertyOptional({ example: 'Near the main gate' })
   @IsOptional()
   @IsString()
   addressText?: string;
 
+  @ApiPropertyOptional({ example: 36.9 })
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
   latitude?: number;
 
+  @ApiPropertyOptional({ example: 10.3 })
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
   longitude?: number;
 
-  @IsOptional()
+  @ApiProperty({ example: 'Blue rubber tag' })
+  @IsNotEmpty()
   @IsString()
-  verificationDetails?: string;
+  verificationDetails!: string;
 
-  @IsOptional()
+  @ApiProperty({ example: 'What is attached to the key ring?' })
+  @IsNotEmpty()
   @IsString()
-  verificationQuestion?: string;
+  verificationQuestion!: string;
 }

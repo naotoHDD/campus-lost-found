@@ -1,0 +1,92 @@
+{
+  "name": "Lost & Found - Automatic item matching",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 10
+            }
+          ]
+        }
+      },
+      "id": "a7b50bea-49d9-4dda-aae0-ccf98f4c3b66",
+      "name": "Every 10 minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [-320, -80]
+    },
+    {
+      "parameters": {},
+      "id": "dfa48657-b3e8-4df9-b508-3fd234f07e18",
+      "name": "Manual test",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-320, 80]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:3000/api/automation/matches/run",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-automation-key",
+              "value": "={{ $env.AUTOMATION_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "{\"limit\":20,\"minimumScore\":60}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "5f2fcf42-8f2c-4c36-a826-536f257c0dc7",
+      "name": "Run automatic matching",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [0, 0]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Every 10 minutes": {
+      "main": [
+        [
+          {
+            "node": "Run automatic matching",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual test": {
+      "main": [
+        [
+          {
+            "node": "Run automatic matching",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Africa/Tunis"
+  },
+  "versionId": "0e7ccfbf-b071-4e73-9d37-b279335420e4",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}

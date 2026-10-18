@@ -19,6 +19,8 @@
     "test:cov": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --coverage --runInBand",
     "test:debug": "node --experimental-vm-modules --inspect-brk ./node_modules/jest/bin/jest.js --runInBand",
     "test:e2e": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config ./jest-e2e.config.cjs --runInBand",
+    "test:integration": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config ./jest-integration.config.cjs --runInBand",
+    "typecheck:integration": "tsc --noEmit -p tsconfig.integration.json",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev --name init",
     "prisma:deploy": "prisma migrate deploy",

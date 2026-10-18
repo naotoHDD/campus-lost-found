@@ -1,1 +1,141 @@
-<section class="admin-page"><div class="heading"><span>Référentiel</span><h1>Localisations utilisées</h1><p>Les localisations enregistrées lors de la publication d’annonces sont gérées ici.</p></div>@if(errorMessage){<p class="error-message">{{ errorMessage }}</p>}<div class="panel references"><div class="add-row"><select [(ngModel)]="governorate"><option value="">Gouvernorat</option>@for(item of governorates;track item){<option [value]="item">{{ item }}</option>}</select><input [(ngModel)]="delegation" placeholder="Délégation"><input [(ngModel)]="locality" placeholder="Localité (facultatif)"><input [(ngModel)]="addressText" placeholder="Adresse (facultatif)"><button class="btn btn-primary" (click)="add()">Ajouter</button></div><div class="locations">@for(location of locations;track location.id){<div class="reference"><span>{{ location.governorate }} · {{ location.delegation }}@if(location.locality){ · {{ location.locality }}}@if(location.addressText){ · {{ location.addressText }}}</span><button class="btn btn-danger" (click)="remove(location)">Supprimer</button></div>}@empty{<p>Aucune localisation enregistrée.</p>}</div></div></section>
+<section class="admin-page">
+  <div class="heading">
+    <span>Référentiel</span>
+    <h1>Localisations utilisées</h1>
+    <p>
+      Gérez les lieux précis associés aux annonces. Les localisations encore utilisées ne peuvent
+      pas être supprimées.
+    </p>
+  </div>
+
+  @if (errorMessage) {
+    <p class="error-message alert" role="alert">{{ errorMessage }}</p>
+  }
+
+  <div class="panel references">
+    <form class="add-form" (ngSubmit)="add()">
+      <h2>Ajouter une localisation</h2>
+      <div class="form-grid">
+        <label>
+          <span>Gouvernorat *</span>
+          <select name="governorate" [(ngModel)]="governorate" required>
+            <option value="">Choisir</option>
+            @for (item of governorates; track item) {
+              <option [value]="item">{{ item }}</option>
+            }
+          </select>
+        </label>
+        <label>
+          <span>Délégation *</span>
+          <input name="delegation" [(ngModel)]="delegation" placeholder="Ex : La Marsa" required />
+        </label>
+        <label>
+          <span>Localité</span>
+          <input name="locality" [(ngModel)]="locality" placeholder="Facultatif" />
+        </label>
+        <label>
+          <span>Adresse / repère</span>
+          <input name="addressText" [(ngModel)]="addressText" placeholder="Facultatif" />
+        </label>
+      </div>
+      <button
+        type="submit"
+        class="btn btn-primary"
+        [disabled]="!governorate || !delegation.trim() || adding"
+      >
+        {{ adding ? 'Ajout…' : 'Ajouter la localisation' }}
+      </button>
+    </form>
+
+    <div class="locations">
+      <div class="list-heading">
+        <h2>Localisations enregistrées</h2>
+        <span>{{ locations.length }} résultat(s)</span>
+      </div>
+
+      @if (loading) {
+        <p class="empty">Chargement des localisations…</p>
+      } @else {
+        @for (location of locations; track location.id) {
+          <article class="reference">
+            @if (editingId === location.id) {
+              <div class="form-grid edit-grid">
+                <label>
+                  <span>Gouvernorat *</span>
+                  <select name="editGovernorate" [(ngModel)]="editDraft.governorate">
+                    @for (item of governorates; track item) {
+                      <option [value]="item">{{ item }}</option>
+                    }
+                  </select>
+                </label>
+                <label>
+                  <span>Délégation *</span>
+                  <input name="editDelegation" [(ngModel)]="editDraft.delegation" />
+                </label>
+                <label>
+                  <span>Localité</span>
+                  <input name="editLocality" [(ngModel)]="editDraft.locality" />
+                </label>
+                <label>
+                  <span>Adresse / repère</span>
+                  <input name="editAddress" [(ngModel)]="editDraft.addressText" />
+                </label>
+              </div>
+              <div class="row-actions">
+                <button
+                  type="button"
+                  class="btn btn-primary btn-compact"
+                  [disabled]="
+                    !editDraft.governorate || !editDraft.delegation.trim() || busyId !== undefined
+                  "
+                  (click)="save(location)"
+                >
+                  {{ busyId === location.id ? 'Enregistrement…' : 'Enregistrer' }}
+                </button>
+                <button type="button" class="btn btn-secondary btn-compact" (click)="cancelEdit()">
+                  Annuler
+                </button>
+              </div>
+            } @else {
+              <div class="location-copy">
+                <strong>{{ location.governorate }} · {{ location.delegation }}</strong>
+                @if (location.locality || location.addressText) {
+                  <small>
+                    @if (location.locality) {
+                      {{ location.locality }}
+                    }
+                    @if (location.locality && location.addressText) {
+                      ·
+                    }
+                    @if (location.addressText) {
+                      {{ location.addressText }}
+                    }
+                  </small>
+                }
+              </div>
+              <div class="row-actions">
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-compact"
+                  (click)="startEdit(location)"
+                >
+                  Modifier
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-danger btn-compact"
+                  [disabled]="busyId !== undefined"
+                  (click)="remove(location)"
+                >
+                  {{ busyId === location.id ? 'Suppression…' : 'Supprimer' }}
+                </button>
+              </div>
+            }
+          </article>
+        } @empty {
+          <p class="empty">Aucune localisation enregistrée.</p>
+        }
+      }
+    </div>
+  </div>
+</section>

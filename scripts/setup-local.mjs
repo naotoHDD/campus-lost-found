@@ -17,6 +17,8 @@ if (!force && (existsSync(dockerEnvPath) || existsSync(backendEnvPath))) {
 const secret = (bytes = 24) => randomBytes(bytes).toString('hex');
 const databasePassword = secret(18);
 const jwtSecret = secret(48);
+const automationKey = secret(32);
+const n8nEncryptionKey = secret(32);
 const adminEmail = 'admin@tunisia.tn';
 const adminPassword = `Admin-${secret(10)}`;
 
@@ -24,13 +26,18 @@ const dockerEnv = `POSTGRES_DB=lost_found
 POSTGRES_USER=lost_found_app
 POSTGRES_PASSWORD=${databasePassword}
 POSTGRES_PORT=5432
+APP_HOST=localhost
 APP_ORIGIN=http://localhost:8080
+APP_BIND_ADDRESS=127.0.0.1
 APP_PORT=8080
 JWT_SECRET=${jwtSecret}
 JWT_EXPIRES_IN=7d
 ADMIN_EMAIL=${adminEmail}
 ADMIN_PASSWORD=${adminPassword}
 ADMIN_NAME=Administrateur
+AUTOMATION_API_KEY=${automationKey}
+N8N_ENCRYPTION_KEY=${n8nEncryptionKey}
+N8N_SECURE_COOKIE=false
 `;
 
 const backendEnv = `DATABASE_URL="postgresql://lost_found_app:${databasePassword}@localhost:5432/lost_found?schema=public"
@@ -42,6 +49,7 @@ CORS_ORIGIN="http://localhost:4200,http://localhost:8080"
 ADMIN_EMAIL="${adminEmail}"
 ADMIN_PASSWORD="${adminPassword}"
 ADMIN_NAME="Administrateur"
+AUTOMATION_API_KEY="${automationKey}"
 `;
 
 mkdirSync(dirname(dockerEnvPath), { recursive: true });

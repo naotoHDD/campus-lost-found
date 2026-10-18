@@ -1,0 +1,16 @@
+services:
+  postgres-test:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: lost_found_test
+      POSTGRES_USER: lost_found_test
+      POSTGRES_PASSWORD: lost_found_test_password
+    ports:
+      - '127.0.0.1:${TEST_POSTGRES_PORT:-55432}:5432'
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U lost_found_test -d lost_found_test']
+      interval: 2s
+      timeout: 3s
+      retries: 15

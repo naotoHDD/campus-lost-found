@@ -1,4 +1,8 @@
-import { BadRequestException, ConflictException, ForbiddenException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { ClaimStatus, ItemStatus, Role } from '@prisma/client';
 import { jest } from '@jest/globals';
 import { PrismaService } from '../common/prisma/prisma.service.js';
@@ -9,16 +13,25 @@ describe('ClaimsService', () => {
   const findFirst = jest.fn();
   const create = jest.fn();
   const claimFindUnique = jest.fn();
+  const claimFindMany = jest.fn();
   const notificationCreate = jest.fn();
   const claimUpdateMany = jest.fn();
   const itemUpdateMany = jest.fn();
-  const transaction = jest.fn(async (callback: (tx: any) => Promise<unknown>) => callback({
-    claim: { updateMany: claimUpdateMany },
-    item: { updateMany: itemUpdateMany },
-  }));
+  const transaction = jest.fn(async (callback: (tx: any) => Promise<unknown>) =>
+    callback({
+      claim: { updateMany: claimUpdateMany },
+      item: { updateMany: itemUpdateMany },
+    }),
+  );
   const service = new ClaimsService({
     item: { findUnique, updateMany: itemUpdateMany },
-    claim: { findFirst, findUnique: claimFindUnique, create, updateMany: claimUpdateMany },
+    claim: {
+      findFirst,
+      findUnique: claimFindUnique,
+      findMany: claimFindMany,
+      create,
+      updateMany: claimUpdateMany,
+    },
     notification: { create: notificationCreate },
     $transaction: transaction,
   } as unknown as PrismaService);
@@ -32,8 +45,9 @@ describe('ClaimsService', () => {
     async (status) => {
       findUnique.mockResolvedValue({ id: 4, authorId: 1, status });
 
-      await expect(service.create(4, 2, { proofText: 'Ownership detail' }))
-        .rejects.toBeInstanceOf(BadRequestException);
+      await expect(
+        service.create(4, 2, { proofText: 'Ownership detail', answer: 'Blue' }),
+      ).rejects.toBeInstanceOf(BadRequestException);
       expect(findFirst).not.toHaveBeenCalled();
       expect(create).not.toHaveBeenCalled();
     },
@@ -46,7 +60,9 @@ describe('ClaimsService', () => {
       item: { authorId: 10 },
     });
 
-    await expect(service.getAttachment(4, 99, Role.USER)).rejects.toBeInstanceOf(ForbiddenException);
+    await expect(
+      service.getAttachment(4, 99, Role.USER),
+    ).rejects.toBeInstanceOf(ForbiddenException);
   });
 
   it('allows a claim participant or an admin to access the attachment filename', async () => {
@@ -56,8 +72,46 @@ describe('ClaimsService', () => {
       item: { authorId: 10 },
     });
 
-    await expect(service.getAttachment(4, 20, Role.USER)).resolves.toBe('safe-name.pdf');
-    await expect(service.getAttachment(4, 99, Role.ADMIN)).resolves.toBe('safe-name.pdf');
+    await expect(service.getAttachment(4, 20, Role.USER)).resolves.toBe(
+      'safe-name.pdf',
+    );
+    await expect(service.getAttachment(4, 99, Role.ADMIN)).resolves.toBe(
+      'safe-name.pdf',
+    );
+  });
+
+  it('lists claims received only for items owned by the current user', async () => {
+    claimFindMany.mockResolvedValue([
+      {
+        id: 8,
+        status: ClaimStatus.PENDING,
+        proofText: 'The phone has a scratch near the camera.',
+        answer: 'Transparent',
+        attachmentUrl: null,
+        createdAt: new Date('2026-10-17T20:00:00Z'),
+        item: {
+          id: 4,
+          title: 'Black phone',
+          type: 'FOUND',
+          status: ItemStatus.ACTIVE,
+          verificationQuestion: 'What color is the case?',
+        },
+        claimant: { id: 20, name: 'Owner', email: 'owner@example.com' },
+      },
+    ]);
+
+    await expect(service.receivedClaims(10)).resolves.toEqual([
+      expect.objectContaining({
+        id: 8,
+        answer: 'Transparent',
+        claimant: { id: 20, name: 'Owner', email: 'owner@example.com' },
+      }),
+    ]);
+    expect(claimFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { item: { authorId: 10 } },
+      }),
+    );
   });
 
   it('rejects acceptance when the claim is no longer pending', async () => {
@@ -69,7 +123,9 @@ describe('ClaimsService', () => {
       item: { authorId: 10, status: ItemStatus.ACTIVE },
     });
 
-    await expect(service.accept(8, 10, Role.USER)).rejects.toBeInstanceOf(ConflictException);
+    await expect(service.accept(8, 10, Role.USER)).rejects.toBeInstanceOf(
+      ConflictException,
+    );
     expect(transaction).not.toHaveBeenCalled();
   });
 
@@ -82,7 +138,9 @@ describe('ClaimsService', () => {
       item: { authorId: 10, status: ItemStatus.CLAIMED },
     });
 
-    await expect(service.accept(8, 10, Role.USER)).rejects.toBeInstanceOf(ConflictException);
+    await expect(service.accept(8, 10, Role.USER)).rejects.toBeInstanceOf(
+      ConflictException,
+    );
     expect(transaction).not.toHaveBeenCalled();
   });
 
@@ -109,6 +167,14 @@ describe('ClaimsService', () => {
     expect(itemUpdateMany).toHaveBeenCalledWith({
       where: { id: 4, status: ItemStatus.ACTIVE },
       data: { status: ItemStatus.CLAIMED },
+    });
+    expect(claimUpdateMany).toHaveBeenCalledWith({
+      where: {
+        itemId: 4,
+        id: { not: 8 },
+        status: ClaimStatus.PENDING,
+      },
+      data: { status: ClaimStatus.REJECTED },
     });
   });
 });

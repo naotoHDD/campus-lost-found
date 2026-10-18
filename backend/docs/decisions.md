@@ -45,3 +45,11 @@ The Angular list currently sends type/category/location/search parameters but no
 ## 11. No full frontend rewrite is required
 
 The backend is built around the actual frontend service calls and form fields already present in the Angular project so the app remains compatible without frontend patching.
+
+## 12. VM provisioning is manual and documented
+
+The deployment target is a manually provisioned Ubuntu Server 24.04 LTS virtual machine. This choice makes Linux users, SSH, firewall rules, Docker installation, networks, volumes, and reverse proxy behavior explicit. The immutable decision and procedure are recorded in `../../docs/ARCHITECTURE.md` and `../../docs/VM-DEPLOYMENT.md`.
+
+## 13. Recovery codes are short-lived
+
+Scheduling a recovery generates a six-digit code with a 30-minute lifetime and five verification attempts. Rescheduling rotates the code and resets both confirmations. Successful verification removes the plaintext code and records `codeVerifiedAt` for traceability.

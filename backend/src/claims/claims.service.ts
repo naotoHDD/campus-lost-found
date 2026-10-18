@@ -1,4 +1,10 @@
-import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { ClaimStatus, ItemStatus, Prisma, Role } from '@prisma/client';
 import { PrismaService } from '../common/prisma/prisma.service.js';
 
@@ -6,14 +12,21 @@ import { PrismaService } from '../common/prisma/prisma.service.js';
 export class ClaimsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(itemId: number, userId: number, dto: { proofText: string; answer?: string }, fileName?: string) {
+  async create(
+    itemId: number,
+    userId: number,
+    dto: { proofText: string; answer: string },
+    fileName?: string,
+  ) {
     const item = await this.prisma.item.findUnique({ where: { id: itemId } });
     if (!item) {
       throw new NotFoundException('Item not found');
     }
 
     if (item.status !== ItemStatus.ACTIVE) {
-      throw new BadRequestException('This item is no longer available for claims.');
+      throw new BadRequestException(
+        'This item is no longer available for claims.',
+      );
     }
 
     if (item.authorId === userId) {
@@ -28,7 +41,9 @@ export class ClaimsService {
     });
 
     if (existing) {
-      throw new ConflictException('You already submitted a claim for this item.');
+      throw new ConflictException(
+        'You already submitted a claim for this item.',
+      );
     }
 
     let claim;
@@ -38,7 +53,7 @@ export class ClaimsService {
           itemId,
           claimantId: userId,
           proofText: dto.proofText,
-          answer: dto.answer ?? null,
+          answer: dto.answer,
           attachmentUrl: fileName ?? null,
           status: ClaimStatus.PENDING,
         },
@@ -47,8 +62,13 @@ export class ClaimsService {
         },
       });
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-        throw new ConflictException('You already submitted a claim for this item.');
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException(
+          'You already submitted a claim for this item.',
+        );
       }
       throw error;
     }
@@ -68,12 +88,37 @@ export class ClaimsService {
     const claims = await this.prisma.claim.findMany({
       where: { claimantId: userId },
       include: {
-        item: { select: { id: true, title: true } },
+        item: { select: { id: true, title: true, type: true, status: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
 
     return claims.map((claim) => this.toPublicClaim(claim));
+  }
+
+  async receivedClaims(userId: number) {
+    const claims = await this.prisma.claim.findMany({
+      where: { item: { authorId: userId } },
+      include: {
+        item: {
+          select: {
+            id: true,
+            title: true,
+            type: true,
+            status: true,
+            verificationQuestion: true,
+          },
+        },
+        claimant: { select: { id: true, name: true, email: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return claims.map((claim) => ({
+      ...this.toPublicClaim(claim),
+      answer: claim.answer,
+      claimant: claim.claimant,
+    }));
   }
 
   async getAttachment(claimId: number, actorId: number, actorRole: string) {
@@ -86,8 +131,14 @@ export class ClaimsService {
       throw new NotFoundException('Claim attachment not found');
     }
 
-    if (actorRole !== Role.ADMIN && claim.claimantId !== actorId && claim.item.authorId !== actorId) {
-      throw new ForbiddenException('Only the claim participants or an admin can access this attachment.');
+    if (
+      actorRole !== Role.ADMIN &&
+      claim.claimantId !== actorId &&
+      claim.item.authorId !== actorId
+    ) {
+      throw new ForbiddenException(
+        'Only the claim participants or an admin can access this attachment.',
+      );
     }
 
     return claim.attachmentUrl;
@@ -104,15 +155,22 @@ export class ClaimsService {
     }
 
     if (actorRole !== Role.ADMIN && claim.item.authorId !== actorId) {
-      throw new ForbiddenException('Only the item owner or an admin can accept a claim.');
+      throw new ForbiddenException(
+        'Only the item owner or an admin can accept a claim.',
+      );
     }
 
     if (claim.claimantId === actorId) {
       throw new ForbiddenException('A claimant cannot accept their own claim.');
     }
 
-    if (claim.status !== ClaimStatus.PENDING || claim.item.status !== ItemStatus.ACTIVE) {
-      throw new ConflictException('Only pending claims for active items can be accepted.');
+    if (
+      claim.status !== ClaimStatus.PENDING ||
+      claim.item.status !== ItemStatus.ACTIVE
+    ) {
+      throw new ConflictException(
+        'Only pending claims for active items can be accepted.',
+      );
     }
 
     await this.prisma.$transaction(async (transaction) => {
@@ -131,6 +189,15 @@ export class ClaimsService {
       if (itemUpdate.count !== 1) {
         throw new ConflictException('This item is no longer active.');
       }
+
+      await transaction.claim.updateMany({
+        where: {
+          itemId: claim.itemId,
+          id: { not: claimId },
+          status: ClaimStatus.PENDING,
+        },
+        data: { status: ClaimStatus.REJECTED },
+      });
     });
 
     await this.prisma.notification.create({
@@ -155,7 +222,9 @@ export class ClaimsService {
     }
 
     if (actorRole !== Role.ADMIN && claim.item.authorId !== actorId) {
-      throw new ForbiddenException('Only the item owner or an admin can reject a claim.');
+      throw new ForbiddenException(
+        'Only the item owner or an admin can reject a claim.',
+      );
     }
 
     if (claim.status !== ClaimStatus.PENDING) {
@@ -194,11 +263,21 @@ export class ClaimsService {
   private toPublicClaim(claim: any) {
     return {
       id: claim.id,
-      item: { id: claim.item.id, title: claim.item.title },
+      item: {
+        id: claim.item.id,
+        title: claim.item.title,
+        type: claim.item.type,
+        status: claim.item.status,
+        verificationQuestion: claim.item.verificationQuestion,
+      },
       status: claim.status,
       proofText: claim.proofText,
-      attachmentUrl: claim.attachmentUrl ? `/api/claims/${claim.id}/attachment` : undefined,
-      createdAt: claim.createdAt ? new Date(claim.createdAt).toISOString() : undefined,
+      attachmentUrl: claim.attachmentUrl
+        ? `/api/claims/${claim.id}/attachment`
+        : undefined,
+      createdAt: claim.createdAt
+        ? new Date(claim.createdAt).toISOString()
+        : undefined,
     };
   }
 }

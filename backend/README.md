@@ -18,6 +18,23 @@ docker compose --env-file docker/.env -f docker/compose.dev.yml up --build
 
 La composition applique les migrations et lance automatiquement le seed idempotent. L’API est disponible sur <http://localhost:3000/api> et Swagger sur <http://localhost:3000/api/docs>.
 
+`GET /api/health` exécute une requête réelle vers PostgreSQL et renvoie HTTP 503 si la base n’est pas prête.
+
+## API d’automatisation
+
+`POST /api/automation/matches/run` traite les annonces actives qui n’ont pas encore été analysées. Cette route est réservée au service n8n et exige que l’en-tête `x-automation-key` corresponde à `AUTOMATION_API_KEY`.
+
+Exemple de corps :
+
+```json
+{
+  "limit": 20,
+  "minimumScore": 60
+}
+```
+
+Le traitement crée des notifications dédupliquées, puis renseigne `automationProcessedAt`. Une modification du titre, de la description, du type, de la date, de la catégorie ou de la localisation remet l’annonce dans la file d’analyse. La route ne lit pas les preuves privées et ne valide jamais une réclamation.
+
 Pour lancer NestJS directement sur l’hôte :
 
 ```powershell
@@ -38,6 +55,8 @@ npm.cmd run start:dev
 - `npm.cmd run prisma:studio` : ouvre Prisma Studio.
 - `npm.cmd test` : tests unitaires.
 - `npm.cmd run test:e2e` : tests HTTP.
+- `npm.cmd run typecheck:integration` : vérifie la compilation du test PostgreSQL réel.
+- `npm.cmd run test:integration` : test HTTP avec vraie base dédiée (voir `../docs/RUNBOOK.md`).
 - `npm.cmd run lint` : analyse statique.
 - `npm.cmd run build` : compilation de production.
 

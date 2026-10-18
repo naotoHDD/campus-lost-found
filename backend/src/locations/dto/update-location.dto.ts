@@ -4,27 +4,26 @@ import { IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class UpdateLocationDto {
   @ApiPropertyOptional({ example: 'Tunis' })
-    @ApiPropertyOptional({ example: 'La Marsa' })
-    @ApiPropertyOptional({ example: 'Gammarth' })
-    @ApiPropertyOptional({ example: 'Near the main gate' })
-    @ApiPropertyOptional({ example: 36.9, minimum: -90, maximum: 90 })
-    @ApiPropertyOptional({ example: 10.3, minimum: -180, maximum: 180 })
   @IsOptional()
   @IsString()
   governorate?: string;
 
+  @ApiPropertyOptional({ example: 'La Marsa' })
   @IsOptional()
   @IsString()
   delegation?: string;
 
+  @ApiPropertyOptional({ example: 'Gammarth' })
   @IsOptional()
   @IsString()
   locality?: string;
 
+  @ApiPropertyOptional({ example: 'Near the main gate' })
   @IsOptional()
   @IsString()
   addressText?: string;
 
+  @ApiPropertyOptional({ example: 36.9, minimum: -90, maximum: 90 })
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
@@ -32,6 +31,7 @@ export class UpdateLocationDto {
   @Max(90)
   latitude?: number;
 
+  @ApiPropertyOptional({ example: 10.3, minimum: -180, maximum: 180 })
   @IsOptional()
   @Type(() => Number)
   @IsNumber()

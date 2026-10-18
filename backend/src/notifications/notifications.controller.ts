@@ -17,6 +17,14 @@ export class NotificationsController {
     return this.prisma.notification.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        userId: true,
+        title: true,
+        message: true,
+        isRead: true,
+        createdAt: true,
+      },
     });
   }
 }

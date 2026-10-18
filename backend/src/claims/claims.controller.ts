@@ -12,11 +12,24 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import type { Response } from 'express';
 import { CurrentUser } from '../common/decorators/current-user.decorator.js';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
-import { claimFileFilter, claimFileStorage, getPrivateUploadDirectory, MAX_UPLOAD_SIZE_BYTES, removeStoredUpload, validateStoredUpload } from '../common/utils/upload.util.js';
+import {
+  claimFileFilter,
+  claimFileStorage,
+  getPrivateUploadDirectory,
+  MAX_UPLOAD_SIZE_BYTES,
+  removeStoredUpload,
+  validateStoredUpload,
+} from '../common/utils/upload.util.js';
 import { ClaimsService } from './claims.service.js';
 import { CreateClaimDto } from './dto/create-claim.dto.js';
 
@@ -33,7 +46,7 @@ export class ClaimsController {
   @ApiBody({
     schema: {
       type: 'object',
-      required: ['proofText'],
+      required: ['proofText', 'answer'],
       properties: {
         proofText: { type: 'string' },
         answer: { type: 'string' },
@@ -56,9 +69,18 @@ export class ClaimsController {
   ) {
     try {
       const attachmentFileName = file
-        ? await validateStoredUpload(file, ['image/jpeg', 'image/png', 'application/pdf'])
+        ? await validateStoredUpload(file, [
+            'image/jpeg',
+            'image/png',
+            'application/pdf',
+          ])
         : undefined;
-      return await this.claimsService.create(itemId, user.id, dto, attachmentFileName);
+      return await this.claimsService.create(
+        itemId,
+        user.id,
+        dto,
+        attachmentFileName,
+      );
     } catch (error) {
       await removeStoredUpload(file);
       throw error;
@@ -73,23 +95,42 @@ export class ClaimsController {
     return this.claimsService.myClaims(user.id);
   }
 
+  @Get('claims/received')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'List claims received for items owned by the authenticated user',
+  })
+  receivedClaims(@CurrentUser() user: { id: number }) {
+    return this.claimsService.receivedClaims(user.id);
+  }
+
   @Get('claims/:claimId/attachment')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Download a private claim attachment as a participant or admin' })
+  @ApiOperation({
+    summary: 'Download a private claim attachment as a participant or admin',
+  })
   async attachment(
     @CurrentUser() user: { id: number; role: string },
     @Param('claimId', ParseIntPipe) claimId: number,
     @Res() response: Response,
   ) {
-    const fileName = await this.claimsService.getAttachment(claimId, user.id, user.role);
+    const fileName = await this.claimsService.getAttachment(
+      claimId,
+      user.id,
+      user.role,
+    );
     response.sendFile(fileName, { root: getPrivateUploadDirectory() });
   }
 
   @Patch('claims/:claimId/accept')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Accept a pending claim for an active item as its owner or an admin' })
+  @ApiOperation({
+    summary:
+      'Accept a pending claim for an active item as its owner or an admin',
+  })
   accept(
     @CurrentUser() user: { id: number; role: string },
     @Param('claimId', ParseIntPipe) claimId: number,
@@ -100,7 +141,9 @@ export class ClaimsController {
   @Patch('claims/:claimId/reject')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Reject a pending claim as its item owner or an admin' })
+  @ApiOperation({
+    summary: 'Reject a pending claim as its item owner or an admin',
+  })
   reject(
     @CurrentUser() user: { id: number; role: string },
     @Param('claimId', ParseIntPipe) claimId: number,

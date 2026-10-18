@@ -1,61 +1,139 @@
-<section class="page">
+<section class="page claims-page">
+  <header class="page-heading">
+    <span>Suivi sécurisé</span>
+    <h1>Réclamations</h1>
+    <p>Examinez les demandes reçues et suivez celles que vous avez envoyées.</p>
+  </header>
 
-  <h1>
-    Mes réclamations
-  </h1>
+  @if (actionError) {
+    <p class="error-message">{{ actionError }}</p>
+  }
 
-  @if (loading) { <p>Chargement des réclamations...</p> }
-  @if (errorMessage) { <p class="error-message">{{ errorMessage }}</p> }
+  <section class="claim-section" aria-labelledby="received-title">
+    <div class="section-heading">
+      <div>
+        <span>Propriétaire de l'annonce</span>
+        <h2 id="received-title">Réclamations reçues</h2>
+      </div>
+      <strong>{{ receivedClaims.length }}</strong>
+    </div>
 
-  <div class="claims">
-
-    @for (
-      claim of claims;
-      track claim.id
-    ) {
-
-      <article class="claim panel">
-
-        <div>
-
-          <span class="status">
-            {{ claim.status }}
-          </span>
-
-          <h2>
-            {{ claim.item.title }}
-          </h2>
-
-          <p>
-            {{ claim.proofText }}
-          </p>
-
-        </div>
-
-        @if (
-          claim.status ===
-            'ACCEPTED'
-        ) {
-
-          <a
-            [routerLink]="[
-              '/recovery',
-              claim.id
-            ]"
-            class=
-              "btn btn-primary"
-          >
-            Organiser la remise
-          </a>
-
-        }
-
-      </article>
-
+    @if (loadingReceived) {
+      <p>Chargement des réclamations reçues...</p>
+    }
+    @if (receivedError) {
+      <p class="error-message">{{ receivedError }}</p>
     }
 
-    @empty { @if (!loading && !errorMessage) { <p>Aucune réclamation.</p> } }
+    <div class="claims">
+      @for (claim of receivedClaims; track claim.id) {
+        <article class="claim panel">
+          <div class="claim-content">
+            <div class="claim-meta">
+              <span class="status" [class]="'status ' + claim.status.toLowerCase()">
+                {{ statusLabel(claim.status) }}
+              </span>
+              <span>{{ claim.item.type === 'FOUND' ? 'Objet trouvé' : 'Objet perdu' }}</span>
+            </div>
+            <h3>{{ claim.item.title }}</h3>
+            <p>
+              <strong>Demandeur :</strong> {{ claim.claimant.name }} · {{ claim.claimant.email }}
+            </p>
+            <div class="evidence">
+              <p><strong>Preuve fournie</strong></p>
+              <p>{{ claim.proofText }}</p>
+              @if (claim.item.verificationQuestion) {
+                <p><strong>Question :</strong> {{ claim.item.verificationQuestion }}</p>
+                <p><strong>Réponse :</strong> {{ claim.answer || 'Aucune réponse' }}</p>
+              }
+            </div>
+          </div>
 
-  </div>
+          <div class="actions">
+            @if (claim.attachmentUrl) {
+              <button
+                type="button"
+                class="btn btn-secondary"
+                [disabled]="actionClaimId === claim.id"
+                (click)="openAttachment(claim)"
+              >
+                Voir le justificatif
+              </button>
+            }
+            @if (claim.status === 'PENDING') {
+              <button
+                type="button"
+                class="btn btn-primary"
+                [disabled]="actionClaimId === claim.id"
+                (click)="accept(claim)"
+              >
+                Accepter
+              </button>
+              <button
+                type="button"
+                class="btn btn-danger"
+                [disabled]="actionClaimId === claim.id"
+                (click)="reject(claim)"
+              >
+                Refuser
+              </button>
+            }
+            @if (claim.status === 'ACCEPTED' || claim.status === 'COMPLETED') {
+              <a [routerLink]="['/recovery', claim.id]" class="btn btn-primary">{{
+                claim.status === 'COMPLETED' ? 'Voir la restitution' : 'Organiser la remise'
+              }}</a>
+            }
+          </div>
+        </article>
+      } @empty {
+        @if (!loadingReceived && !receivedError) {
+          <div class="empty-state">Aucune réclamation reçue pour vos annonces.</div>
+        }
+      }
+    </div>
+  </section>
 
+  <section class="claim-section" aria-labelledby="submitted-title">
+    <div class="section-heading">
+      <div>
+        <span>Demandeur</span>
+        <h2 id="submitted-title">Réclamations envoyées</h2>
+      </div>
+      <strong>{{ claims.length }}</strong>
+    </div>
+
+    @if (loadingSubmitted) {
+      <p>Chargement des réclamations envoyées...</p>
+    }
+    @if (submittedError) {
+      <p class="error-message">{{ submittedError }}</p>
+    }
+
+    <div class="claims">
+      @for (claim of claims; track claim.id) {
+        <article class="claim panel">
+          <div class="claim-content">
+            <div class="claim-meta">
+              <span class="status" [class]="'status ' + claim.status.toLowerCase()">
+                {{ statusLabel(claim.status) }}
+              </span>
+            </div>
+            <h3>{{ claim.item.title }}</h3>
+            <p>{{ claim.proofText }}</p>
+          </div>
+          @if (claim.status === 'ACCEPTED' || claim.status === 'COMPLETED') {
+            <div class="actions">
+              <a [routerLink]="['/recovery', claim.id]" class="btn btn-primary">{{
+                claim.status === 'COMPLETED' ? 'Voir la restitution' : 'Organiser la remise'
+              }}</a>
+            </div>
+          }
+        </article>
+      } @empty {
+        @if (!loadingSubmitted && !submittedError) {
+          <div class="empty-state">Vous n'avez envoyé aucune réclamation.</div>
+        }
+      }
+    </div>
+  </section>
 </section>

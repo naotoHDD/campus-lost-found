@@ -32,8 +32,17 @@ export class ReferenceDataService {
     return this.http.get<LocationRecord[]>(`${API_BASE_URL}/locations`);
   }
 
-  createLocation(location: Pick<LocationRecord, 'governorate' | 'delegation' | 'locality' | 'addressText'>) {
+  createLocation(
+    location: Pick<LocationRecord, 'governorate' | 'delegation' | 'locality' | 'addressText'>,
+  ) {
     return this.http.post<LocationRecord>(`${API_BASE_URL}/locations`, location);
+  }
+
+  updateLocation(
+    id: number,
+    location: Pick<LocationRecord, 'governorate' | 'delegation' | 'locality' | 'addressText'>,
+  ) {
+    return this.http.patch<LocationRecord>(`${API_BASE_URL}/locations/${id}`, location);
   }
 
   deleteLocation(id: number) {
@@ -42,6 +51,10 @@ export class ReferenceDataService {
 
   createCategory(name: string) {
     return this.http.post<Category>(`${API_BASE_URL}/categories`, { name });
+  }
+
+  updateCategory(id: number, name: string) {
+    return this.http.patch<Category>(`${API_BASE_URL}/categories/${id}`, { name });
   }
 
   deleteCategory(id: number) {

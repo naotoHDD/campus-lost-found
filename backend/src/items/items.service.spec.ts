@@ -13,7 +13,9 @@ describe('ItemsService', () => {
   const update = jest.fn();
   const remove = jest.fn();
   const service = new ItemsService(
-    { item: { findMany, findUnique, count, update, delete: remove } } as unknown as PrismaService,
+    {
+      item: { findMany, findUnique, count, update, delete: remove },
+    } as unknown as PrismaService,
     {} as CategoriesService,
     {} as LocationsService,
   );
@@ -28,16 +30,18 @@ describe('ItemsService', () => {
   it('applies governorate and delegation filters together', async () => {
     await service.list({ governorate: 'Tunis', delegation: 'La Marsa' });
 
-    expect(findMany).toHaveBeenCalledWith(expect.objectContaining({
-      where: expect.objectContaining({
-        location: {
-          is: {
-            governorate: { contains: 'Tunis', mode: 'insensitive' },
-            delegation: { contains: 'La Marsa', mode: 'insensitive' },
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          location: {
+            is: {
+              governorate: { contains: 'Tunis', mode: 'insensitive' },
+              delegation: { contains: 'La Marsa', mode: 'insensitive' },
+            },
           },
-        },
+        }),
       }),
-    }));
+    );
   });
 
   it('does not expose the item author email in public item details', async () => {
@@ -48,6 +52,8 @@ describe('ItemsService', () => {
       type: 'FOUND',
       status: 'ACTIVE',
       imageUrl: null,
+      verificationQuestion: 'What colour is the rubber tag?',
+      verificationDetails: 'The expected answer is blue',
       itemDate: new Date('2026-10-05T12:00:00.000Z'),
       createdAt: new Date('2026-10-05T12:00:00.000Z'),
       category: { id: 1, name: 'Keys' },
@@ -69,22 +75,33 @@ describe('ItemsService', () => {
     expect(result.addressText).toBeUndefined();
     expect(result.latitude).toBe(36.81);
     expect(result.longitude).toBe(10.18);
+    expect(result.verificationQuestion).toBe('What colour is the rubber tag?');
+    expect(result).not.toHaveProperty('verificationDetails');
   });
 
   it('forbids non-owners from updating or deleting an item', async () => {
     findUnique.mockResolvedValue({ id: 4, authorId: 1 });
 
-    await expect(service.update(4, 2, {})).rejects.toBeInstanceOf(ForbiddenException);
-    await expect(service.remove(4, 2, false)).rejects.toBeInstanceOf(ForbiddenException);
+    await expect(service.update(4, 2, {})).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+    await expect(service.remove(4, 2, false)).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
     expect(update).not.toHaveBeenCalled();
     expect(remove).not.toHaveBeenCalled();
   });
 
   it('only lets owners close an active item through status updates', async () => {
-    findUnique.mockResolvedValue({ id: 4, authorId: 2, status: ItemStatus.ACTIVE });
+    findUnique.mockResolvedValue({
+      id: 4,
+      authorId: 2,
+      status: ItemStatus.ACTIVE,
+    });
 
-    await expect(service.update(4, 2, { status: ItemStatus.CLAIMED }))
-      .rejects.toBeInstanceOf(ForbiddenException);
+    await expect(
+      service.update(4, 2, { status: ItemStatus.CLAIMED }),
+    ).rejects.toBeInstanceOf(ForbiddenException);
     expect(update).not.toHaveBeenCalled();
   });
 });

@@ -5,6 +5,7 @@ export interface Item {
   type: 'LOST' | 'FOUND';
   status: 'ACTIVE' | 'CLAIMED' | 'RETURNED' | 'CLOSED';
   imageUrl?: string;
+  verificationQuestion?: string;
   category: { id: number; name: string };
   governorate: string;
   delegation: string;

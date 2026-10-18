@@ -1,93 +1,116 @@
-<section class="page">
-
-  <div class="panel claim-form">
-
-    <h1>
-      Réclamer cet objet
-    </h1>
-
-    <p>
-      Donnez des informations
-      permettant de vérifier que
-      l'objet vous appartient.
-    </p>
-
-    <div class="warning">
-
-      Ne partagez jamais de
-      mot de passe ou
-      d'information bancaire.
-
+<section class="page claim-page">
+  @if (loading) {
+    <div class="panel state-card" aria-live="polite">Chargement de l’annonce…</div>
+  } @else if (!item) {
+    <div class="panel state-card">
+      <h1>Annonce indisponible</h1>
+      <p>{{ errorMessage }}</p>
+      <button type="button" class="btn btn-secondary" (click)="loadItem()">Réessayer</button>
+      <a routerLink="/items" class="btn btn-primary">Retour aux annonces</a>
     </div>
+  } @else {
+    <div class="claim-layout">
+      <aside class="panel item-summary" aria-label="Annonce réclamée">
+        <span class="eyebrow">{{ item.type === 'FOUND' ? 'Objet trouvé' : 'Objet perdu' }}</span>
+        @if (item.imageUrl) {
+          <img [src]="item.imageUrl" [alt]="item.title" />
+        }
+        <h2>{{ item.title }}</h2>
+        <p>{{ item.category.name }} · {{ item.governorate }}, {{ item.delegation }}</p>
+        <a [routerLink]="['/items', item.id]">Voir l’annonce complète</a>
+      </aside>
 
-    <form
-      [formGroup]="form"
-      (ngSubmit)="submit()"
-    >
-
-      <div class="form-field">
-
-        <label>
-          Preuve ou détail
-        </label>
-
-        <textarea
-          formControlName=
-            "proofText"
-          placeholder=
-            "Décrivez un détail que seul le propriétaire peut connaître."
-        ></textarea>
-
-      </div>
-
-      <div class="form-field">
-
-        <label>
-          Réponse à la question
-        </label>
-
-        <input
-          formControlName=
-            "answer"
-        >
-
-      </div>
-
-      <div class="form-field">
-
-        <label>
-          Fichier justificatif
-          optionnel
-        </label>
-
-        <input
-          type="file"
-          (change)="
-            onFileSelected(
-              $event
-            )
-          "
-        >
-
-      </div>
-
-      @if (errorMessage) {
-
-        <p class="error-message">
-          {{ errorMessage }}
+      <main class="panel claim-form">
+        <span class="eyebrow">Vérification de propriété</span>
+        <h1>Réclamer cet objet</h1>
+        <p class="intro">
+          Votre réponse est transmise au déposant afin qu’il puisse vérifier votre demande.
         </p>
 
-      }
+        @if (isOwnItem) {
+          <div class="notice notice-error" role="alert">
+            Vous ne pouvez pas réclamer votre propre annonce.
+          </div>
+        } @else if (item.status !== 'ACTIVE') {
+          <div class="notice notice-error" role="alert">
+            Cet objet n’accepte plus de nouvelles réclamations.
+          </div>
+        } @else {
+          <div class="notice notice-warning">
+            Ne partagez jamais de mot de passe, de code bancaire ou de document d’identité complet.
+          </div>
 
-      <button
-        class="btn btn-primary"
-        [disabled]="form.invalid"
-      >
-        Envoyer la réclamation
-      </button>
+          <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+            <div class="question-card">
+              <span>Question du déposant</span>
+              <strong>
+                {{
+                  item.verificationQuestion ||
+                    'Quel détail distinctif prouve que cet objet vous appartient ?'
+                }}
+              </strong>
+            </div>
 
-    </form>
+            <div class="form-field">
+              <label for="answer">Votre réponse *</label>
+              <input
+                id="answer"
+                formControlName="answer"
+                autocomplete="off"
+                placeholder="Répondez précisément à la question"
+                [attr.aria-invalid]="form.controls.answer.invalid && form.controls.answer.touched"
+              />
+              @if (form.controls.answer.invalid && form.controls.answer.touched) {
+                <small class="field-error">Une réponse est obligatoire.</small>
+              }
+            </div>
 
-  </div>
+            <div class="form-field">
+              <label for="proofText">Preuve ou détail complémentaire *</label>
+              <textarea
+                id="proofText"
+                formControlName="proofText"
+                placeholder="Décrivez un détail que seul le propriétaire peut connaître."
+                [attr.aria-invalid]="
+                  form.controls.proofText.invalid && form.controls.proofText.touched
+                "
+              ></textarea>
+              @if (form.controls.proofText.invalid && form.controls.proofText.touched) {
+                <small class="field-error">Saisissez au moins 5 caractères.</small>
+              }
+            </div>
 
+            <div class="form-field file-field">
+              <label for="proofFile">Justificatif optionnel</label>
+              <input
+                id="proofFile"
+                type="file"
+                accept="image/jpeg,image/png,application/pdf"
+                aria-describedby="fileHelp"
+                (change)="onFileSelected($event)"
+              />
+              <small id="fileHelp">JPG, PNG ou PDF · 5 Mo maximum</small>
+              @if (selectedFileName) {
+                <span class="file-selected">Fichier sélectionné : {{ selectedFileName }}</span>
+              }
+              @if (fileError) {
+                <small class="field-error" role="alert">{{ fileError }}</small>
+              }
+            </div>
+
+            @if (errorMessage) {
+              <p class="notice notice-error" role="alert">{{ errorMessage }}</p>
+            }
+
+            <div class="actions">
+              <a [routerLink]="['/items', item.id]" class="btn btn-secondary">Annuler</a>
+              <button class="btn btn-primary" type="submit" [disabled]="form.invalid || sending">
+                {{ sending ? 'Envoi en cours…' : 'Envoyer la réclamation' }}
+              </button>
+            </div>
+          </form>
+        }
+      </main>
+    </div>
+  }
 </section>

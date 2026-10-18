@@ -136,9 +136,7 @@ A stable paginated response shape should be used, for example:
 
 ```json
 {
-  "data": [
-    { "id": 1, "title": "..." }
-  ],
+  "data": [{ "id": 1, "title": "..." }],
   "meta": {
     "page": 1,
     "limit": 6,
@@ -155,7 +153,12 @@ A stable paginated response shape should be used, for example:
 ```ts
 interface Claim {
   id: number;
-  item: { id: number; title: string };
+  item: {
+    id: number;
+    title: string;
+    type: 'LOST' | 'FOUND';
+    status: 'ACTIVE' | 'CLAIMED' | 'RETURNED' | 'CLOSED';
+  };
   status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'COMPLETED';
   proofText: string;
   createdAt: string;
@@ -172,13 +175,17 @@ interface Claim {
     - optional `file`
   - Response: created claim record
 - `GET http://localhost:3000/api/claims/my`
-  - Returns current user's claims
+  - Returns claims submitted by the current user
+- `GET http://localhost:3000/api/claims/received`
+  - Returns claims received on items published by the current user
+  - Includes the claimant identity, verification question and submitted answer so the item author can decide
 - `GET http://localhost:3000/api/claims/:claimId/attachment`
   - Requires a Bearer token; only the claimant, item owner, or an admin can retrieve the private attachment
 - `PATCH http://localhost:3000/api/claims/:claimId/accept`
-  - Accepts a claim
+  - Accepts a claim; only the item author or an admin can do this
+  - Atomically marks the item as claimed and rejects the other pending claims for that item
 - `PATCH http://localhost:3000/api/claims/:claimId/reject`
-  - Rejects a claim
+  - Rejects a claim; only the item author or an admin can do this
 
 ### Claim lifecycle expectations
 
@@ -191,6 +198,10 @@ interface Claim {
 
 ### Service
 
+- `GET http://localhost:3000/api/recovery/:claimId`
+  - Returns the recovery state for one participant
+  - Includes the meeting, current status, participant role and both confirmation flags
+  - The six-digit verification code is returned only to the physical owner of the item (or an admin)
 - `PATCH http://localhost:3000/api/recovery/:claimId/meeting`
   - Request:
     ```json
@@ -207,6 +218,7 @@ interface Claim {
       "code": "123456"
     }
     ```
+  - Only the person physically holding the item (the finder) can verify the code
 - `PATCH http://localhost:3000/api/recovery/:claimId/confirm`
   - Request:
     ```json
@@ -214,8 +226,9 @@ interface Claim {
       "confirmation": "FINDER" | "CLAIMANT"
     }
     ```
+  - A participant can confirm only their own physical role; an admin can intervene when necessary
 
-This is effectively a claim recovery coordinator, not a separate independent workflow.
+For a `FOUND` announcement, the author is the finder and the claimant is the physical owner. For a `LOST` announcement, the author is the physical owner and the claimant is the finder. The recovery is completed only after successful code verification and both participant confirmations; the claim then becomes `COMPLETED` and the item becomes `RETURNED`.
 
 ## 6. Categories and locations
 

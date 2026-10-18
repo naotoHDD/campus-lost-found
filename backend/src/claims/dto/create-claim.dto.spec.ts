@@ -8,14 +8,34 @@ describe('CreateClaimDto', () => {
       answer: 'Blue interior lining',
     });
 
-    await expect(validate(dto, { whitelist: true, forbidNonWhitelisted: true })).resolves.toEqual([]);
+    await expect(
+      validate(dto, { whitelist: true, forbidNonWhitelisted: true }),
+    ).resolves.toEqual([]);
   });
 
   it('requires proofText', async () => {
-    const dto = Object.assign(new CreateClaimDto(), { answer: 'Blue interior lining' });
+    const dto = Object.assign(new CreateClaimDto(), {
+      answer: 'Blue interior lining',
+    });
 
-    const errors = await validate(dto, { whitelist: true, forbidNonWhitelisted: true });
+    const errors = await validate(dto, {
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    });
 
     expect(errors.map((error) => error.property)).toContain('proofText');
+  });
+
+  it('requires an answer to the item verification question', async () => {
+    const dto = Object.assign(new CreateClaimDto(), {
+      proofText: 'A detail only the owner would know',
+    });
+
+    const errors = await validate(dto, {
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    });
+
+    expect(errors.map((error) => error.property)).toContain('answer');
   });
 });

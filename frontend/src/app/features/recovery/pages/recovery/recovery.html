@@ -1,136 +1,215 @@
-<section class="page">
-
-  <div class="recovery">
-
-    <div class="panel">
-
-      <span class="step-label">
-        Restitution
-      </span>
-
-      <h1>
-        Organiser la remise
-      </h1>
-
-      <p>
-        Utilisez uniquement
-        un lieu universitaire.
-      </p>
-
-      <div class="form-field">
-
-        <label>
-          Lieu
-        </label>
-
-        <select
-          [(ngModel)]="location"
-        >
-          <option>
-            Bibliothèque
-          </option>
-
-          <option>
-            Administration
-          </option>
-
-          <option>
-            Sécurité
-          </option>
-
-          <option>
-            Accueil
-          </option>
-        </select>
-
-      </div>
-
-      <div class="form-field">
-
-        <label>
-          Date
-        </label>
-
-        <input
-          type="date"
-          [(ngModel)]="date"
-        >
-
-      </div>
-
-      <div class="form-field">
-
-        <label>
-          Heure
-        </label>
-
-        <input
-          type="time"
-          [(ngModel)]="time"
-        >
-
-      </div>
-
+<section class="page recovery-page">
+  @if (loading) {
+    <div class="empty-state">Chargement de la restitution...</div>
+  } @else if (errorMessage && !recovery) {
+    <div class="empty-state">
+      <p>{{ errorMessage }}</p>
     </div>
-
-
-    <div class="panel">
-
-      <h2>
-        Code de récupération
-      </h2>
-
-      <p>
-        Le propriétaire affiche
-        le code et le finder le
-        saisit lors de la remise.
-      </p>
-
-      <input
-        class="code-input"
-        maxlength="6"
-        placeholder="000000"
-        [(ngModel)]="code"
-      >
-
-      <div class="confirmations">
-
-        <label>
-          <input
-            type="checkbox"
-            [(ngModel)]="
-              finderConfirmed
-            "
-          >
-          Objet remis
-        </label>
-
-        <label>
-          <input
-            type="checkbox"
-            [(ngModel)]="
-              claimantConfirmed
-            "
-          >
-          Objet récupéré
-        </label>
-
+  } @else if (recovery) {
+    <header class="recovery-header">
+      <div>
+        <span class="step-label">Restitution sécurisée</span>
+        <h1>{{ recovery.item.title }}</h1>
+        <p>{{ roleLabel(recovery.participantRole) }}</p>
       </div>
+      <span class="recovery-status" [class]="'recovery-status ' + recovery.status.toLowerCase()">
+        {{ statusLabel(recovery.status) }}
+      </span>
+    </header>
 
-      @if (
-        finderConfirmed &&
-        claimantConfirmed
-      ) {
+    @if (errorMessage) {
+      <p class="error-message" aria-live="polite">{{ errorMessage }}</p>
+    }
+    @if (successMessage) {
+      <p class="success-message" aria-live="polite">{{ successMessage }}</p>
+    }
 
-        <div class="success-message">
-          Double confirmation
-          effectuée.
+    <div class="recovery">
+      <section class="panel meeting-panel">
+        <span class="section-number">1</span>
+        <h2>Organiser la remise</h2>
+        <p>
+          Choisissez un lieu public et sûr. Les deux participants peuvent consulter et mettre à jour
+          le rendez-vous.
+        </p>
+
+        <div class="form-field">
+          <label for="meeting-location">Lieu</label>
+          <select
+            id="meeting-location"
+            [(ngModel)]="location"
+            [disabled]="busy || recovery.status === 'COMPLETED'"
+          >
+            <option>Bibliothèque</option>
+            <option>Administration</option>
+            <option>Sécurité</option>
+            <option>Accueil</option>
+          </select>
         </div>
 
-      }
+        <div class="date-grid">
+          <div class="form-field">
+            <label for="meeting-date">Date</label>
+            <input
+              id="meeting-date"
+              type="date"
+              [min]="minDate"
+              [(ngModel)]="date"
+              [disabled]="busy || recovery.status === 'COMPLETED'"
+            />
+          </div>
+          <div class="form-field">
+            <label for="meeting-time">Heure</label>
+            <input
+              id="meeting-time"
+              type="time"
+              [(ngModel)]="time"
+              [disabled]="busy || recovery.status === 'COMPLETED'"
+            />
+          </div>
+        </div>
 
+        @if (recovery.status !== 'COMPLETED') {
+          <button type="button" class="btn btn-primary" [disabled]="busy" (click)="saveMeeting()">
+            {{
+              recovery.meetingDate ? 'Mettre à jour le rendez-vous' : 'Enregistrer le rendez-vous'
+            }}
+          </button>
+        }
+
+        @if (recovery.meetingDate) {
+          <div class="meeting-summary">
+            <strong>Rendez-vous actuel</strong>
+            <span>{{ recovery.meetingLocation }} · {{ meetingLabel() }}</span>
+          </div>
+        }
+      </section>
+
+      <section class="panel verification-panel">
+        <span class="section-number">2</span>
+        <h2>Vérifier la remise</h2>
+        <p>
+          Le propriétaire montre le code. La personne ayant trouvé l'objet le saisit au moment de la
+          rencontre.
+        </p>
+
+        @if (recovery.status === 'PENDING') {
+          <div class="verification-waiting">
+            Enregistrez d'abord le rendez-vous pour générer le code.
+          </div>
+        } @else if (recovery.status === 'SCHEDULED' && recovery.codeExpired) {
+          <div class="verification-expired" role="alert">
+            <strong>Le code a expiré.</strong>
+            <span>Modifiez le rendez-vous pour générer un nouveau code sécurisé.</span>
+          </div>
+        } @else if (
+          recovery.status === 'SCHEDULED' &&
+          recovery.hasVerificationCode &&
+          (recovery.participantRole === 'CLAIMANT' || recovery.participantRole === 'ADMIN')
+        ) {
+          <div class="code-display" aria-label="Code de récupération">
+            <span>Code à montrer lors de la remise</span>
+            <strong>{{ recovery.verificationCode }}</strong>
+            <small>Valable jusqu’au {{ expiryLabel() }} (heure de Tunis)</small>
+          </div>
+        } @else if (recovery.status === 'SCHEDULED' && recovery.hasVerificationCode) {
+          <label for="recovery-code" class="code-label">Code à 6 chiffres</label>
+          <input
+            id="recovery-code"
+            class="code-input"
+            inputmode="numeric"
+            maxlength="6"
+            placeholder="000000"
+            [(ngModel)]="code"
+            [disabled]="busy"
+          />
+          <button type="button" class="btn btn-primary" [disabled]="busy" (click)="verifyCode()">
+            Vérifier le code
+          </button>
+          <p class="security-meta">
+            {{ recovery.attemptsRemaining }} tentative(s) restante(s) · expiration
+            {{ expiryLabel() }}
+          </p>
+        } @else if (recovery.status === 'VERIFIED' || recovery.status === 'COMPLETED') {
+          <div class="verified-code">
+            <strong>Code vérifié</strong>
+            <span>La confirmation de remise est maintenant disponible.</span>
+          </div>
+        }
+
+        @if (recovery.status === 'VERIFIED' || recovery.status === 'COMPLETED') {
+          <div class="confirmation-progress">
+            <div [class.done]="recovery.finderConfirmed">
+              <span>{{ recovery.finderConfirmed ? '✓' : '1' }}</span>
+              Objet remis
+            </div>
+            <div [class.done]="recovery.claimantConfirmed">
+              <span>{{ recovery.claimantConfirmed ? '✓' : '2' }}</span>
+              Objet récupéré
+            </div>
+          </div>
+
+          @if (
+            recovery.participantRole === 'FINDER' &&
+            !recovery.finderConfirmed &&
+            recovery.status !== 'COMPLETED'
+          ) {
+            <button
+              type="button"
+              class="btn btn-primary"
+              [disabled]="busy"
+              (click)="confirm('FINDER')"
+            >
+              Je confirme avoir remis l'objet
+            </button>
+          }
+          @if (
+            recovery.participantRole === 'CLAIMANT' &&
+            !recovery.claimantConfirmed &&
+            recovery.status !== 'COMPLETED'
+          ) {
+            <button
+              type="button"
+              class="btn btn-primary"
+              [disabled]="busy"
+              (click)="confirm('CLAIMANT')"
+            >
+              Je confirme avoir récupéré l'objet
+            </button>
+          }
+          @if (recovery.participantRole === 'ADMIN' && recovery.status !== 'COMPLETED') {
+            <div class="admin-actions">
+              @if (!recovery.finderConfirmed) {
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  [disabled]="busy"
+                  (click)="confirm('FINDER')"
+                >
+                  Confirmer la remise
+                </button>
+              }
+              @if (!recovery.claimantConfirmed) {
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  [disabled]="busy"
+                  (click)="confirm('CLAIMANT')"
+                >
+                  Confirmer la réception
+                </button>
+              }
+            </div>
+          }
+        }
+
+        @if (recovery.status === 'COMPLETED') {
+          <div class="completed-message">
+            <strong>Restitution terminée</strong>
+            <span>L'objet est maintenant marqué comme rendu.</span>
+          </div>
+        }
+      </section>
     </div>
-
-  </div>
-
+  }
 </section>

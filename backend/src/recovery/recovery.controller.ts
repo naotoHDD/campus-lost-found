@@ -1,19 +1,47 @@
-import { Body, Controller, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../common/decorators/current-user.decorator.js';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
 import { RecoveryService } from './recovery.service.js';
-import { RecoveryConfirmationDto, RecoveryCodeDto, RecoveryMeetingDto } from './dto/recovery.dto.js';
+import {
+  RecoveryConfirmationDto,
+  RecoveryCodeDto,
+  RecoveryMeetingDto,
+} from './dto/recovery.dto.js';
 
 @Controller('recovery')
 @ApiTags('Recovery')
 export class RecoveryController {
   constructor(private readonly recoveryService: RecoveryService) {}
 
+  @Get(':claimId')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get recovery details visible to the current participant',
+  })
+  getRecovery(
+    @CurrentUser() user: { id: number; role: string },
+    @Param('claimId', ParseIntPipe) claimId: number,
+  ) {
+    return this.recoveryService.getRecovery(claimId, user.id, user.role);
+  }
+
   @Patch(':claimId/meeting')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Schedule or update a meeting for an accepted claim' })
+  @ApiOperation({
+    summary: 'Schedule or update a meeting for an accepted claim',
+  })
   updateMeeting(
     @CurrentUser() user: { id: number; role: string },
     @Param('claimId', ParseIntPipe) claimId: number,
@@ -31,7 +59,12 @@ export class RecoveryController {
     @Param('claimId', ParseIntPipe) claimId: number,
     @Body() dto: RecoveryCodeDto,
   ) {
-    return this.recoveryService.verifyCode(claimId, user.id, user.role, dto.code);
+    return this.recoveryService.verifyCode(
+      claimId,
+      user.id,
+      user.role,
+      dto.code,
+    );
   }
 
   @Patch(':claimId/confirm')
@@ -43,6 +76,11 @@ export class RecoveryController {
     @Param('claimId', ParseIntPipe) claimId: number,
     @Body() dto: RecoveryConfirmationDto,
   ) {
-    return this.recoveryService.confirm(claimId, user.id, user.role, dto.confirmation);
+    return this.recoveryService.confirm(
+      claimId,
+      user.id,
+      user.role,
+      dto.confirmation,
+    );
   }
 }

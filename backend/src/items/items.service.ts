@@ -1,4 +1,9 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { ItemStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../common/prisma/prisma.service.js';
 import { CategoriesService } from '../categories/categories.service.js';
@@ -36,7 +41,13 @@ export class ItemsService {
       where.OR = [
         { title: { contains: filters.search, mode: 'insensitive' } },
         { description: { contains: filters.search, mode: 'insensitive' } },
-        { location: { is: { addressText: { contains: filters.search, mode: 'insensitive' } } } },
+        {
+          location: {
+            is: {
+              addressText: { contains: filters.search, mode: 'insensitive' },
+            },
+          },
+        },
       ];
     }
 
@@ -49,16 +60,24 @@ export class ItemsService {
     }
 
     if (filters.category) {
-      where.category = { is: { name: { contains: filters.category, mode: 'insensitive' } } };
+      where.category = {
+        is: { name: { contains: filters.category, mode: 'insensitive' } },
+      };
     }
 
     const locationFilter: Prisma.LocationWhereInput = {};
     if (filters.governorate) {
-      locationFilter.governorate = { contains: filters.governorate, mode: 'insensitive' };
+      locationFilter.governorate = {
+        contains: filters.governorate,
+        mode: 'insensitive',
+      };
     }
 
     if (filters.delegation) {
-      locationFilter.delegation = { contains: filters.delegation, mode: 'insensitive' };
+      locationFilter.delegation = {
+        contains: filters.delegation,
+        mode: 'insensitive',
+      };
     }
 
     if (Object.keys(locationFilter).length > 0) {
@@ -143,7 +162,13 @@ export class ItemsService {
     return this.toPublicItem(item, { includePreciseLocation: true });
   }
 
-  async update(id: number, userId: number, dto: UpdateItemDto, imagePath?: string, isAdmin = false) {
+  async update(
+    id: number,
+    userId: number,
+    dto: UpdateItemDto,
+    imagePath?: string,
+    isAdmin = false,
+  ) {
     const existing = await this.prisma.item.findUnique({
       where: { id },
     });
@@ -156,27 +181,74 @@ export class ItemsService {
       throw new ForbiddenException('You can only update your own items.');
     }
 
-    if (!isAdmin && dto.status !== undefined && dto.status !== ItemStatus.CLOSED) {
-      throw new ForbiddenException('Owners may only close their own active items.');
+    if (
+      !isAdmin &&
+      dto.status !== undefined &&
+      dto.status !== ItemStatus.CLOSED
+    ) {
+      throw new ForbiddenException(
+        'Owners may only close their own active items.',
+      );
     }
 
-    if (!isAdmin && dto.status === ItemStatus.CLOSED && existing.status !== ItemStatus.ACTIVE) {
+    if (
+      !isAdmin &&
+      dto.status === ItemStatus.CLOSED &&
+      existing.status !== ItemStatus.ACTIVE
+    ) {
       throw new BadRequestException('Only active items can be closed.');
     }
 
-    const category = dto.category ? await this.categoriesService.upsertByName(dto.category) : existing.categoryId;
-    const currentItem = dto.governorate || dto.delegation || dto.locality || dto.addressText || dto.latitude !== undefined || dto.longitude !== undefined
-      ? await this.prisma.item.findUnique({ where: { id }, include: { location: true } })
-      : null;
+    const category = dto.category
+      ? await this.categoriesService.upsertByName(dto.category)
+      : existing.categoryId;
+    const currentItem =
+      dto.governorate ||
+      dto.delegation ||
+      dto.locality ||
+      dto.addressText ||
+      dto.latitude !== undefined ||
+      dto.longitude !== undefined
+        ? await this.prisma.item.findUnique({
+            where: { id },
+            include: { location: true },
+          })
+        : null;
 
-    const location = currentItem ? await this.locationsService.findOrCreate({
-      governorate: dto.governorate ?? currentItem.location.governorate,
-      delegation: dto.delegation ?? currentItem.location.delegation,
-      locality: dto.locality ?? currentItem.location.locality ?? null,
-      addressText: dto.addressText ?? currentItem.location.addressText ?? null,
-      latitude: dto.latitude ?? (currentItem.location.latitude != null ? Number(currentItem.location.latitude) : null),
-      longitude: dto.longitude ?? (currentItem.location.longitude != null ? Number(currentItem.location.longitude) : null),
-    }) : undefined;
+    const location = currentItem
+      ? await this.locationsService.findOrCreate({
+          governorate: dto.governorate ?? currentItem.location.governorate,
+          delegation: dto.delegation ?? currentItem.location.delegation,
+          locality: dto.locality ?? currentItem.location.locality ?? null,
+          addressText:
+            dto.addressText ?? currentItem.location.addressText ?? null,
+          latitude:
+            dto.latitude ??
+            (currentItem.location.latitude != null
+              ? Number(currentItem.location.latitude)
+              : null),
+          longitude:
+            dto.longitude ??
+            (currentItem.location.longitude != null
+              ? Number(currentItem.location.longitude)
+              : null),
+        })
+      : undefined;
+    const matchingDataChanged =
+      [
+        dto.title,
+        dto.description,
+        dto.type,
+        dto.itemDate,
+        dto.category,
+        dto.governorate,
+        dto.delegation,
+        dto.locality,
+        dto.addressText,
+        dto.latitude,
+        dto.longitude,
+      ].some((value) => value !== undefined) ||
+      dto.status === ItemStatus.ACTIVE;
 
     const updated = await this.prisma.item.update({
       where: { id },
@@ -189,7 +261,14 @@ export class ItemsService {
         imageUrl: imagePath ? `/api/files/${imagePath}` : undefined,
         verificationDetails: dto.verificationDetails,
         verificationQuestion: dto.verificationQuestion,
-        category: dto.category ? { connect: { id: typeof category === 'number' ? category : category.id } } : undefined,
+        automationProcessedAt: matchingDataChanged ? null : undefined,
+        category: dto.category
+          ? {
+              connect: {
+                id: typeof category === 'number' ? category : category.id,
+              },
+            }
+          : undefined,
         location: location ? { connect: { id: location.id } } : undefined,
       },
       include: {
@@ -212,16 +291,25 @@ export class ItemsService {
     }
 
     if (!isAdmin && existing.authorId !== userId) {
-      throw new ForbiddenException('You cannot delete someone else\'s item.');
+      throw new ForbiddenException("You cannot delete someone else's item.");
     }
 
     await this.prisma.item.delete({ where: { id } });
     return { success: true };
   }
 
-  private toPublicItem(item: any, visibility: { includePreciseLocation?: boolean } = {}) {
-    const latitude = item.location.latitude != null ? Number(item.location.latitude) : undefined;
-    const longitude = item.location.longitude != null ? Number(item.location.longitude) : undefined;
+  private toPublicItem(
+    item: any,
+    visibility: { includePreciseLocation?: boolean } = {},
+  ) {
+    const latitude =
+      item.location.latitude != null
+        ? Number(item.location.latitude)
+        : undefined;
+    const longitude =
+      item.location.longitude != null
+        ? Number(item.location.longitude)
+        : undefined;
 
     return {
       id: item.id,
@@ -230,18 +318,35 @@ export class ItemsService {
       type: item.type,
       status: item.status,
       imageUrl: item.imageUrl ?? undefined,
+      verificationQuestion: item.verificationQuestion ?? undefined,
       category: {
         id: item.category.id,
         name: item.category.name,
       },
       governorate: item.location.governorate,
       delegation: item.location.delegation,
-      locality: visibility.includePreciseLocation ? item.location.locality ?? undefined : undefined,
-      addressText: visibility.includePreciseLocation ? item.location.addressText ?? undefined : undefined,
-      latitude: visibility.includePreciseLocation ? latitude : latitude !== undefined ? Number(latitude.toFixed(2)) : undefined,
-      longitude: visibility.includePreciseLocation ? longitude : longitude !== undefined ? Number(longitude.toFixed(2)) : undefined,
-      itemDate: item.itemDate ? new Date(item.itemDate).toISOString() : undefined,
-      createdAt: item.createdAt ? new Date(item.createdAt).toISOString() : undefined,
+      locality: visibility.includePreciseLocation
+        ? (item.location.locality ?? undefined)
+        : undefined,
+      addressText: visibility.includePreciseLocation
+        ? (item.location.addressText ?? undefined)
+        : undefined,
+      latitude: visibility.includePreciseLocation
+        ? latitude
+        : latitude !== undefined
+          ? Number(latitude.toFixed(2))
+          : undefined,
+      longitude: visibility.includePreciseLocation
+        ? longitude
+        : longitude !== undefined
+          ? Number(longitude.toFixed(2))
+          : undefined,
+      itemDate: item.itemDate
+        ? new Date(item.itemDate).toISOString()
+        : undefined,
+      createdAt: item.createdAt
+        ? new Date(item.createdAt).toISOString()
+        : undefined,
       author: item.author
         ? {
             id: item.author.id,

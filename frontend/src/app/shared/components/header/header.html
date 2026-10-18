@@ -8,11 +8,14 @@
       </span>
     </a>
     <nav class="desktop-nav">
-      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Accueil</a>
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
+        >Accueil</a
+      >
       <a routerLink="/items" routerLinkActive="active">Recherche</a>
       @if (auth.isLoggedIn()) {
         <a routerLink="/my-items" routerLinkActive="active">Mes annonces</a>
         <a routerLink="/my-claims" routerLinkActive="active">Réclamations</a>
+        <a routerLink="/notifications" routerLinkActive="active">Activité</a>
       }
     </nav>
     <div class="account">

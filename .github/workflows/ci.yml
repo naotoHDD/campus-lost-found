@@ -26,11 +26,25 @@ jobs:
 
   backend:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: lost_found_test
+          POSTGRES_USER: lost_found_app
+          POSTGRES_PASSWORD: ci-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U lost_found_app -d lost_found_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     defaults:
       run:
         working-directory: backend
     env:
-      DATABASE_URL: postgresql://lost_found_app:ci-password@localhost:5432/lost_found?schema=public
+      DATABASE_URL: postgresql://lost_found_app:ci-password@localhost:5432/lost_found_test?schema=public
       JWT_SECRET: ci-only-secret-for-tests
     steps:
       - uses: actions/checkout@v4
@@ -41,7 +55,29 @@ jobs:
           cache-dependency-path: backend/package-lock.json
       - run: npm ci
       - run: npx prisma generate
+      - run: npx prisma validate
+      - name: Validate n8n workflow JSON
+        run: node -e "JSON.parse(require('fs').readFileSync('../n8n/workflows/item-matching.json', 'utf8'))"
+      - name: Validate full Docker Compose configuration
+        env:
+          POSTGRES_DB: lost_found
+          POSTGRES_USER: lost_found_app
+          POSTGRES_PASSWORD: ci-only-database-password
+          APP_HOST: localhost
+          APP_ORIGIN: http://localhost:8080
+          APP_PORT: 8080
+          JWT_SECRET: ci-only-secret-for-compose-validation
+          ADMIN_EMAIL: admin@example.com
+          ADMIN_PASSWORD: ci-only-admin-password
+          AUTOMATION_API_KEY: ci-only-automation-key
+          N8N_ENCRYPTION_KEY: ci-only-n8n-encryption-key
+        run: docker compose -f ../docker/compose.full.yml config > /dev/null
       - run: npm run lint
       - run: npm test
       - run: npm run test:e2e
+      - run: npm run typecheck:integration
+      - name: Apply migrations to the isolated test database
+        run: npm run prisma:deploy
+      - name: Run real PostgreSQL integration test
+        run: npm run test:integration
       - run: npm run build

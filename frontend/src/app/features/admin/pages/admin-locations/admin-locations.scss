@@ -1,1 +1,132 @@
-.admin-page{padding:30px}.heading span{color:var(--blue);font-weight:800}.heading h1{margin:5px 0}.heading p{color:var(--muted);max-width:800px}.references{margin-top:22px}.add-row{display:flex;gap:10px;margin-bottom:24px}.add-row input{flex:1;min-height:44px;padding:10px;border:1px solid var(--border);border-radius:8px}.chips{display:flex;flex-wrap:wrap;gap:10px}.chip{display:flex;align-items:center;gap:7px;padding:8px 10px;border:1px solid var(--border);border-radius:20px;background:var(--cloud)}.chip button{border:0;background:transparent;color:var(--red);font-size:18px}@media(max-width:600px){.admin-page{padding:18px}.add-row{flex-direction:column}}
+.admin-page {
+  padding: 30px;
+}
+
+.heading span {
+  color: var(--blue);
+  font-weight: 800;
+}
+
+.heading h1 {
+  margin: 5px 0;
+}
+
+.heading p,
+.location-copy small,
+.empty,
+.list-heading span {
+  color: var(--muted);
+}
+
+.heading p {
+  max-width: 800px;
+}
+
+.references {
+  margin-top: 22px;
+}
+
+.add-form {
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.add-form h2,
+.list-heading h2 {
+  margin: 0 0 14px;
+  font-size: 18px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.form-grid label {
+  display: grid;
+  gap: 6px;
+  color: var(--navy);
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.form-grid input,
+.form-grid select {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 11px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: white;
+}
+
+.locations {
+  margin-top: 24px;
+}
+
+.list-heading,
+.reference,
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.list-heading {
+  justify-content: space-between;
+}
+
+.reference {
+  justify-content: space-between;
+  min-height: 72px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.reference:last-child {
+  border-bottom: 0;
+}
+
+.location-copy strong,
+.location-copy small {
+  display: block;
+}
+
+.edit-grid {
+  flex: 1;
+  margin: 0;
+}
+
+.btn-compact {
+  min-height: 38px;
+  padding: 8px 13px;
+}
+
+.alert {
+  padding: 12px 14px;
+  border-left: 4px solid var(--red);
+  border-radius: 8px;
+  background: #fff0f2;
+}
+
+@media (max-width: 760px) {
+  .admin-page {
+    padding: 18px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .reference {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .row-actions .btn {
+    flex: 1;
+  }
+}

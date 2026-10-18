@@ -1,1 +1,86 @@
-<section class="admin-page"><div class="heading"><span>Référentiel</span><h1>Catégories</h1><p>Gérez les catégories disponibles lors de la publication.</p></div>@if(errorMessage){<p class="error-message">{{ errorMessage }}</p>}<div class="panel references"><div class="add-row"><input [(ngModel)]="newCategory" placeholder="Nouvelle catégorie"><button class="btn btn-primary" (click)="add()">Ajouter</button></div>@for(category of categories;track category.id){<div class="reference"><span>{{ category.name }}</span><button class="btn btn-danger" (click)="remove(category)">Supprimer</button></div>}</div></section>
+<section class="admin-page">
+  <div class="heading">
+    <span>Référentiel</span>
+    <h1>Catégories</h1>
+    <p>Ajoutez, renommez ou supprimez les catégories proposées lors de la publication.</p>
+  </div>
+
+  @if (errorMessage) {
+    <p class="error-message alert" role="alert">{{ errorMessage }}</p>
+  }
+
+  <div class="panel references">
+    <form class="add-row" (ngSubmit)="add()">
+      <label class="sr-only" for="newCategory">Nouvelle catégorie</label>
+      <input
+        id="newCategory"
+        name="newCategory"
+        [(ngModel)]="newCategory"
+        maxlength="80"
+        placeholder="Nouvelle catégorie"
+      />
+      <button type="submit" class="btn btn-primary" [disabled]="!newCategory.trim() || adding">
+        {{ adding ? 'Ajout…' : 'Ajouter' }}
+      </button>
+    </form>
+
+    @if (loading) {
+      <p class="empty">Chargement des catégories…</p>
+    } @else {
+      <div class="reference-list">
+        @for (category of categories; track category.id) {
+          <div class="reference">
+            @if (editingId === category.id) {
+              <label class="sr-only" [for]="'category-' + category.id">Nom de la catégorie</label>
+              <input
+                [id]="'category-' + category.id"
+                name="editingCategory"
+                [(ngModel)]="editingName"
+                maxlength="80"
+                (keyup.enter)="save(category)"
+                (keyup.escape)="cancelEdit()"
+              />
+              <div class="row-actions">
+                <button
+                  type="button"
+                  class="btn btn-primary btn-compact"
+                  [disabled]="!editingName.trim() || busyId !== undefined"
+                  (click)="save(category)"
+                >
+                  {{ busyId === category.id ? 'Enregistrement…' : 'Enregistrer' }}
+                </button>
+                <button type="button" class="btn btn-secondary btn-compact" (click)="cancelEdit()">
+                  Annuler
+                </button>
+              </div>
+            } @else {
+              <div>
+                <strong>{{ category.name }}</strong>
+                <small>{{ category.slug }}</small>
+              </div>
+              <div class="row-actions">
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-compact"
+                  (click)="startEdit(category)"
+                >
+                  Modifier
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-danger btn-compact"
+                  [disabled]="busyId !== undefined"
+                  (click)="remove(category)"
+                >
+                  {{ busyId === category.id ? 'Suppression…' : 'Supprimer' }}
+                </button>
+              </div>
+            }
+          </div>
+        } @empty {
+          <p class="empty">Aucune catégorie enregistrée.</p>
+        }
+      </div>
+    }
+  </div>
+</section>

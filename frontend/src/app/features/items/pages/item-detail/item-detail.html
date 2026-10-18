@@ -1,29 +1,62 @@
 <section class="page">
-@if (loading) {
-  <div class="empty-state">Chargement de l’objet…</div>
-} @else if (errorMessage) {
-  <div class="empty-state">
-    <p>{{ errorMessage }}</p>
-    <button type="button" (click)="loadItem()">Réessayer</button>
-  </div>
-} @else if (item) {
-  <div class="detail-card">
-    <div class="image">@if (item.imageUrl) { <img [src]="item.imageUrl" [alt]="item.title"> } @else { <div class="placeholder">Aucun visuel</div> }</div>
-    <div class="information">
-      <span class="type">{{ item.type === 'FOUND' ? 'OBJET TROUVÉ' : 'OBJET PERDU' }}</span>
-      <h1>{{ item.title }}</h1>
-      <p><strong>Catégorie :</strong> {{ item.category.name }}</p>
-      <p><strong>Localisation :</strong> {{ item.governorate }} • {{ item.delegation }}</p>
-      @if (item.locality) { <p><strong>Localité :</strong> {{ item.locality }}</p> }
-      @if (item.addressText) { <p><strong>Repère :</strong> {{ item.addressText }}</p> }
-      <p><strong>Date :</strong> {{ item.itemDate | date:'dd/MM/yyyy' }}</p>
-      <p><strong>Statut :</strong> {{ item.status }}</p>
-      <div class="description"><h2>Description</h2><p>{{ item.description }}</p></div>
-      @if (item.status === 'ACTIVE') { <a [routerLink]="['/claims/new', item.id]" class="btn btn-primary">Réclamer cet objet</a> }
+  @if (loading) {
+    <div class="empty-state">Chargement de l’objet…</div>
+  } @else if (errorMessage) {
+    <div class="empty-state">
+      <p>{{ errorMessage }}</p>
+      <button type="button" (click)="loadItem()">Réessayer</button>
     </div>
-  </div>
-  @if (item.latitude && item.longitude) {
-    <div class="panel map-panel"><h2>Emplacement indiqué</h2><p class="privacy-note">La précision publique de la carte doit être configurée côté backend selon votre politique de confidentialité.</p><app-location-picker [latitude]="item.latitude" [longitude]="item.longitude" [readonly]="true" /></div>
+  } @else if (item) {
+    <div class="detail-card">
+      <div class="image">
+        @if (item.imageUrl) {
+          <img [src]="item.imageUrl" [alt]="item.title" />
+        } @else {
+          <div class="placeholder">Aucun visuel</div>
+        }
+      </div>
+      <div class="information">
+        <span class="type">{{ item.type === 'FOUND' ? 'OBJET TROUVÉ' : 'OBJET PERDU' }}</span>
+        <h1>{{ item.title }}</h1>
+        <p><strong>Catégorie :</strong> {{ item.category.name }}</p>
+        <p><strong>Localisation :</strong> {{ item.governorate }} • {{ item.delegation }}</p>
+        @if (item.locality) {
+          <p><strong>Localité :</strong> {{ item.locality }}</p>
+        }
+        @if (item.addressText) {
+          <p><strong>Repère :</strong> {{ item.addressText }}</p>
+        }
+        <p><strong>Date :</strong> {{ item.itemDate | date: 'dd/MM/yyyy' }}</p>
+        <p><strong>Statut :</strong> {{ item.status }}</p>
+        <div class="description">
+          <h2>Description</h2>
+          <p>{{ item.description }}</p>
+        </div>
+        @if (item.status === 'ACTIVE' && !isOwnItem) {
+          <a [routerLink]="['/claims/new', item.id]" class="btn btn-primary">Réclamer cet objet</a>
+        } @else if (item.status === 'ACTIVE' && isOwnItem) {
+          <p class="owner-note">
+            Cette annonce vous appartient. Les réclamations reçues sont visibles dans « Réclamations
+            ».
+          </p>
+        }
+      </div>
+    </div>
+    @if (item.latitude && item.longitude) {
+      <div class="panel map-panel">
+        <h2>Emplacement indiqué</h2>
+        <p class="privacy-note">
+          La précision publique de la carte doit être configurée côté backend selon votre politique
+          de confidentialité.
+        </p>
+        <app-location-picker
+          [latitude]="item.latitude"
+          [longitude]="item.longitude"
+          [readonly]="true"
+        />
+      </div>
+    }
+  } @else {
+    <div class="empty-state">Objet introuvable.</div>
   }
-} @else { <div class="empty-state">Objet introuvable.</div> }
 </section>

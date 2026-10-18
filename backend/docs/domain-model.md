@@ -73,6 +73,7 @@ Fields:
 - imageUrl: String?
 - verificationDetails: String?
 - verificationQuestion: String?
+- automationProcessedAt: DateTime? (null when the announcement must be analyzed by automation)
 - createdAt: DateTime @default(now())
 - updatedAt: DateTime @updatedAt
 
@@ -157,6 +158,7 @@ Fields:
 - userId: Int
 - title: String
 - message: String
+- dedupeKey: String? @unique (prevents duplicate automated notifications)
 - isRead: Boolean @default(false)
 - createdAt: DateTime @default(now())
 

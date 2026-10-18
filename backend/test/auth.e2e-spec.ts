@@ -59,10 +59,16 @@ describe('API HTTP contract', () => {
       findMany: jest.fn(),
       create: jest.fn(),
     },
+    $queryRawUnsafe: jest.fn(),
+    $transaction: jest.fn(
+      async (callback: (transaction: unknown) => Promise<unknown>) =>
+        callback(prisma),
+    ),
   };
 
   beforeAll(async () => {
-    process.env.JWT_SECRET ??= 'test-only-secret-that-is-never-used-outside-jest';
+    process.env.JWT_SECRET ??=
+      'test-only-secret-that-is-never-used-outside-jest';
 
     const moduleRef: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -73,16 +79,21 @@ describe('API HTTP contract', () => {
 
     app = moduleRef.createNestApplication();
     app.setGlobalPrefix('api');
-    app.useGlobalPipes(new ValidationPipe({
-      whitelist: true,
-      transform: true,
-      forbidNonWhitelisted: true,
-    }));
-    openApiDocument = SwaggerModule.createDocument(app, new DocumentBuilder()
-      .setTitle('Lost & Found Tunisia API')
-      .setVersion('1.0')
-      .addBearerAuth()
-      .build());
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        transform: true,
+        forbidNonWhitelisted: true,
+      }),
+    );
+    openApiDocument = SwaggerModule.createDocument(
+      app,
+      new DocumentBuilder()
+        .setTitle('Lost & Found Tunisia API')
+        .setVersion('1.0')
+        .addBearerAuth()
+        .build(),
+    );
     SwaggerModule.setup('api/docs', app, openApiDocument);
     await app.init();
   });
@@ -95,6 +106,20 @@ describe('API HTTP contract', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    prisma.$queryRawUnsafe.mockResolvedValue([{ '?column?': 1 }]);
+  });
+
+  it('reports API and PostgreSQL readiness', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/health')
+      .expect(200);
+
+    expect(response.body).toMatchObject({
+      status: 'ok',
+      database: 'up',
+      timestamp: expect.any(String),
+    });
+    expect(prisma.$queryRawUnsafe).toHaveBeenCalledWith('SELECT 1');
   });
 
   async function registerToken(id = 12) {
@@ -132,21 +157,35 @@ describe('API HTTP contract', () => {
 
   it('registers with the frontend response shape and stores only a password hash', async () => {
     prisma.user.findUnique.mockResolvedValue(null);
-    prisma.user.create.mockImplementation(async (args: any) => ({ id: 1, ...args.data }));
+    prisma.user.create.mockImplementation(async (args: any) => ({
+      id: 1,
+      ...args.data,
+    }));
 
     const response = await request(app.getHttpServer())
       .post('/api/auth/register')
-      .send({ name: 'Amina Ben Ali', email: 'amina@example.com', password: 'secret123' });
+      .send({
+        name: 'Amina Ben Ali',
+        email: 'amina@example.com',
+        password: 'secret123',
+      });
 
     expect(response.status).toBe(201);
     expect(response.body).toMatchObject({
       accessToken: expect.any(String),
-      user: { id: 1, name: 'Amina Ben Ali', email: 'amina@example.com', role: Role.USER },
+      user: {
+        id: 1,
+        name: 'Amina Ben Ali',
+        email: 'amina@example.com',
+        role: Role.USER,
+      },
     });
     expect(response.body.user).not.toHaveProperty('passwordHash');
     const storedUser = prisma.user.create.mock.calls[0]?.[0].data;
     expect(storedUser.passwordHash).not.toBe('secret123');
-    await expect(bcrypt.compare('secret123', storedUser.passwordHash)).resolves.toBe(true);
+    await expect(
+      bcrypt.compare('secret123', storedUser.passwordHash),
+    ).resolves.toBe(true);
   });
 
   it('rejects duplicate registrations', async () => {
@@ -154,7 +193,11 @@ describe('API HTTP contract', () => {
 
     const response = await request(app.getHttpServer())
       .post('/api/auth/register')
-      .send({ name: 'Amina Ben Ali', email: 'amina@example.com', password: 'secret123' });
+      .send({
+        name: 'Amina Ben Ali',
+        email: 'amina@example.com',
+        password: 'secret123',
+      });
 
     expect(response.status).toBe(409);
   });
@@ -186,7 +229,12 @@ describe('API HTTP contract', () => {
     expect(response.status).toBe(201);
     expect(response.body).toMatchObject({
       accessToken: expect.any(String),
-      user: { id: user.id, name: user.name, email: user.email, role: Role.USER },
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: Role.USER,
+      },
     });
   });
 
@@ -241,38 +289,48 @@ describe('API HTTP contract', () => {
     prisma.item.count.mockResolvedValue(0);
 
     const response = await request(app.getHttpServer())
-      .get('/api/items?type=FOUND&status=ACTIVE&governorate=Tunis&delegation=La%20Marsa&page=2&limit=3')
+      .get(
+        '/api/items?type=FOUND&status=ACTIVE&governorate=Tunis&delegation=La%20Marsa&page=2&limit=3',
+      )
       .expect(200);
 
     expect(response.body).toEqual({
       data: [],
       meta: { page: 2, limit: 3, total: 0, totalPages: 1 },
     });
-    expect(prisma.item.findMany).toHaveBeenCalledWith(expect.objectContaining({
-      skip: 3,
-      take: 3,
-      where: {
-        type: ItemType.FOUND,
-        status: ItemStatus.ACTIVE,
-        location: {
-          is: {
-            governorate: { contains: 'Tunis', mode: 'insensitive' },
-            delegation: { contains: 'La Marsa', mode: 'insensitive' },
+    expect(prisma.item.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        skip: 3,
+        take: 3,
+        where: {
+          type: ItemType.FOUND,
+          status: ItemStatus.ACTIVE,
+          location: {
+            is: {
+              governorate: { contains: 'Tunis', mode: 'insensitive' },
+              delegation: { contains: 'La Marsa', mode: 'insensitive' },
+            },
           },
         },
-      },
-    }));
+      }),
+    );
   });
 
   it('rejects invalid item filters and out-of-range pagination', async () => {
-    await request(app.getHttpServer()).get('/api/items?type=UNKNOWN').expect(400);
+    await request(app.getHttpServer())
+      .get('/api/items?type=UNKNOWN')
+      .expect(400);
     await request(app.getHttpServer()).get('/api/items?limit=101').expect(400);
   });
 
   it('creates an item through the protected multipart-compatible endpoint', async () => {
     const token = await registerToken(31);
     prisma.category.findUnique.mockResolvedValue(null);
-    prisma.category.create.mockResolvedValue({ id: 1, name: 'Keys', slug: 'keys' });
+    prisma.category.create.mockResolvedValue({
+      id: 1,
+      name: 'Keys',
+      slug: 'keys',
+    });
     prisma.location.upsert.mockResolvedValue({
       id: 1,
       governorate: 'Tunis',
@@ -334,7 +392,11 @@ describe('API HTTP contract', () => {
 
   it('creates a claim through the protected route for an active item', async () => {
     const token = await registerToken(41);
-    prisma.item.findUnique.mockResolvedValue({ id: 5, authorId: 10, status: ItemStatus.ACTIVE });
+    prisma.item.findUnique.mockResolvedValue({
+      id: 5,
+      authorId: 10,
+      status: ItemStatus.ACTIVE,
+    });
     prisma.claim.findFirst.mockResolvedValue(null);
     prisma.claim.create.mockResolvedValue({
       id: 7,
@@ -361,6 +423,106 @@ describe('API HTTP contract', () => {
       status: ClaimStatus.PENDING,
       proofText: 'The key tag is blue',
     });
+  });
+
+  it('lists claims received by an item owner without exposing them publicly', async () => {
+    await request(app.getHttpServer()).get('/api/claims/received').expect(401);
+    const token = await registerToken(10);
+    prisma.claim.findMany.mockResolvedValue([
+      {
+        id: 7,
+        status: ClaimStatus.PENDING,
+        proofText: 'The phone has a scratch near the camera.',
+        answer: 'Transparent',
+        attachmentUrl: null,
+        createdAt: new Date('2026-10-17T20:00:00.000Z'),
+        item: {
+          id: 5,
+          title: 'Black phone',
+          type: ItemType.FOUND,
+          status: ItemStatus.ACTIVE,
+          verificationQuestion: 'What color is the case?',
+        },
+        claimant: { id: 41, name: 'Amina', email: 'amina@example.com' },
+      },
+    ]);
+
+    const response = await request(app.getHttpServer())
+      .get('/api/claims/received')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    expect(response.body[0]).toMatchObject({
+      id: 7,
+      answer: 'Transparent',
+      claimant: { id: 41, name: 'Amina', email: 'amina@example.com' },
+    });
+    expect(prisma.claim.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { item: { authorId: 10 } },
+      }),
+    );
+  });
+
+  it('returns a recovery view tailored to the authenticated participant', async () => {
+    const ownerToken = await registerToken(20);
+    prisma.claim.findUnique.mockResolvedValue({
+      id: 8,
+      itemId: 5,
+      claimantId: 20,
+      status: ClaimStatus.ACCEPTED,
+      item: {
+        id: 5,
+        title: 'Black phone',
+        type: ItemType.FOUND,
+        status: ItemStatus.CLAIMED,
+        authorId: 10,
+      },
+    });
+    prisma.recovery.findUnique.mockResolvedValue({
+      status: 'SCHEDULED',
+      meetingLocation: 'Bibliothèque',
+      meetingDate: new Date('2026-10-20T14:00:00.000Z'),
+      verificationCode: '123456',
+      verificationCodeExpiresAt: new Date(Date.now() + 60_000),
+      verificationAttempts: 0,
+      finderConfirmed: false,
+      claimantConfirmed: false,
+    });
+
+    const ownerResponse = await request(app.getHttpServer())
+      .get('/api/recovery/8')
+      .set('Authorization', `Bearer ${ownerToken}`)
+      .expect(200);
+
+    expect(ownerResponse.body).toMatchObject({
+      participantRole: 'CLAIMANT',
+      verificationCode: '123456',
+      hasVerificationCode: true,
+    });
+
+    const finderToken = await registerToken(10);
+    prisma.claim.findUnique.mockResolvedValue({
+      id: 8,
+      itemId: 5,
+      claimantId: 20,
+      status: ClaimStatus.ACCEPTED,
+      item: {
+        id: 5,
+        title: 'Black phone',
+        type: ItemType.FOUND,
+        status: ItemStatus.CLAIMED,
+        authorId: 10,
+      },
+    });
+
+    const finderResponse = await request(app.getHttpServer())
+      .get('/api/recovery/8')
+      .set('Authorization', `Bearer ${finderToken}`)
+      .expect(200);
+
+    expect(finderResponse.body.participantRole).toBe('FINDER');
+    expect(finderResponse.body).not.toHaveProperty('verificationCode');
   });
 
   it('denies normal users and allows admins on admin routes', async () => {
@@ -402,8 +564,12 @@ describe('API HTTP contract', () => {
       .send({ name: 'Documents' })
       .expect(403);
 
-    prisma.category.create.mockResolvedValue({ id: 2, name: 'Documents', slug: 'documents' });
-  prisma.user.findUnique.mockResolvedValue({ id: 99, role: Role.ADMIN });
+    prisma.category.create.mockResolvedValue({
+      id: 2,
+      name: 'Documents',
+      slug: 'documents',
+    });
+    prisma.user.findUnique.mockResolvedValue({ id: 99, role: Role.ADMIN });
     await request(app.getHttpServer())
       .post('/api/categories')
       .set('Authorization', `Bearer ${adminToken}`)
@@ -429,17 +595,30 @@ describe('API HTTP contract', () => {
 
   it('documents bearer auth, filters, and multipart uploads in OpenAPI', () => {
     const paths = openApiDocument.paths;
-    const itemList = Object.entries(paths).find(([path]) => path.endsWith('/items'))?.[1];
-    const adminStats = Object.entries(paths).find(([path]) => path.endsWith('/admin/stats'))?.[1];
-    const itemCreateSchema = itemList?.post?.requestBody?.content?.['multipart/form-data']?.schema;
+    const itemList = Object.entries(paths).find(([path]) =>
+      path.endsWith('/items'),
+    )?.[1];
+    const adminStats = Object.entries(paths).find(([path]) =>
+      path.endsWith('/admin/stats'),
+    )?.[1];
+    const itemCreateSchema =
+      itemList?.post?.requestBody?.content?.['multipart/form-data']?.schema;
 
-    expect(itemList?.get?.parameters).toEqual(expect.arrayContaining([
-      expect.objectContaining({ name: 'governorate', in: 'query' }),
-      expect.objectContaining({ name: 'delegation', in: 'query' }),
-      expect.objectContaining({ name: 'status', in: 'query' }),
-    ]));
-    expect(itemCreateSchema?.properties?.image).toMatchObject({ type: 'string', format: 'binary' });
+    expect(itemList?.get?.parameters).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'governorate', in: 'query' }),
+        expect.objectContaining({ name: 'delegation', in: 'query' }),
+        expect.objectContaining({ name: 'status', in: 'query' }),
+      ]),
+    );
+    expect(itemCreateSchema?.properties?.image).toMatchObject({
+      type: 'string',
+      format: 'binary',
+    });
     expect(adminStats?.get?.security).toContainEqual({ bearer: [] });
-    expect(openApiDocument.components?.schemas?.RegisterDto?.properties?.password?.writeOnly).toBe(true);
+    expect(
+      openApiDocument.components?.schemas?.RegisterDto?.properties?.password
+        ?.writeOnly,
+    ).toBe(true);
   });
 });
